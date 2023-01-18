@@ -1,0 +1,66 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Carte_CHATILA_Yann_PremierNiveau.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Tous les Fichiers (*)",
+    "fileStates": {
+        "Background.tsx": {
+            "scaleInDock": 0.125,
+            "scaleInEditor": 0.5
+        },
+        "Carte_CHATILA_Yann_PremierNiveau.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 798,
+                "y": 553.3333333333334
+            }
+        },
+        "G:/Ecole/Level Design/Projet Side Scroller/Mon niveau/Carte.tmx": {
+            "scale": 0.37346874999999996,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 800.6024600451844,
+                "y": 801.9412601455946
+            }
+        },
+        "G:/Ecole/Level Design/Projet Side Scroller/Mon niveau/Tileset_placeholder.tsx": {
+            "scaleInDock": 1
+        },
+        "G:/Ecole/Level Design/Projet Side Scroller/Mon niveau/Tileset_placeholder_v5.tsx": {
+            "scaleInDock": 1
+        },
+        "PremierPlan.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 0.75
+        },
+        "SecondPlan.tsx": {
+            "scaleInDock": 0.125,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "G:/Ecole/Level Design/Projet Side Scroller/Mon niveau/JV1A_CHATILA_Yann_LD_PremierNiveau_01",
+    "map.height": 50,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 50,
+    "openFiles": [
+        "Carte_CHATILA_Yann_PremierNiveau.tmx",
+        "PremierPlan.tsx",
+        "SecondPlan.tsx",
+        "Background.tsx"
+    ],
+    "project": "JV1A_CHATILA_Yann_LD_PremierNiveau_01.tiled-project",
+    "recentFiles": [
+        "Background.tsx",
+        "SecondPlan.tsx",
+        "PremierPlan.tsx",
+        "Carte_CHATILA_Yann_PremierNiveau.tmx",
+        "G:/Ecole/Level Design/Projet Side Scroller/Mon niveau/Carte.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
