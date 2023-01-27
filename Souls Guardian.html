@@ -22,7 +22,7 @@
                     default: 'arcade',
                     arcade: {
                     gravity: { y: 600 },
-                    debug: false
+                    debug: true
                     }},
 
                 scene: {preload: preload, create: create, update: update }
@@ -30,137 +30,192 @@
 
                 new Phaser.Game(config);
 
+                // FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
+
                 function preload(){
                     
-                    // chargement tuiles de jeu
-                    this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
+                        // NIVEAU - Préchargement de la carte
 
-                    // chargement de la carte
-                    this.load.tilemapTiledJSON("carte", "assets/map.json");
-                    this.load.image('background', 'assets/background.png');
-                    this.load.image('secondPlan', 'assets/secondPlan.png'); 
-                    this.load.spritesheet('perso','assets/perso.png',
-                        { frameWidth: 32, frameHeight: 48 });
-                }
+                            // NIVEAU - chargement tuiles de jeu
+                            this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
 
-                // annonce des variables
-                var platforms;
-                var player;
-                var cursors;
-                var scoreText;
-                var gameOver = false;
+                            // NIVEAU - chargement de la carte
+                            this.load.tilemapTiledJSON("carte", "assets/map.json");
+                            this.load.image('background', 'assets/background.png');
+                            this.load.image('secondPlan', 'assets/secondPlan.png'); 
+                            this.load.spritesheet('perso','assets/perso.png',
+                                { frameWidth: 32, frameHeight: 48 });
+                    }
+
+                // VARIABLES - annonce des variables
+                    var platforms;
+                    var player;
+                    var cursors;
+                    var scoreText;
+                    var gameOver = false;
+                    var bloqueAxeX = false; 
+
+                // FONCTION CREATE - Gère le stade initial du jeu
 
                 function create(){
 
-                    // ajout des images de background
-                    this.add.image(800, 800, 'background');
-                    this.add.image(800, 800, 'secondPlan');
+                    // NIVEAU
 
-                    // chargement de la carte
-                    const carteDuNiveau = this.add.tilemap("carte");
+                        // NIVEAU - ajout des images de background
+                        this.add.image(800, 800, 'background');
+                        this.add.image(800, 800, 'secondPlan');
 
-                    // chargement du jeu de tuiles
-                    const tileset = carteDuNiveau.addTilesetImage(
-                            "PremierPlan",
-                            "Phaser_tuilesdejeu",
-                            );
+                        // NIVEAU - Intégration de la map de TILED
+                            // chargement de la carte
+                            const carteDuNiveau = this.add.tilemap("carte");
 
-                    // chargement du calque calque_plateformes
-                    const plateformes = carteDuNiveau.createLayer(
-                            "plateformes",
-                            tileset
-                            );
+                            // chargement du jeu de tuiles
+                            const tileset = carteDuNiveau.addTilesetImage(
+                                    "PremierPlan",
+                                    "Phaser_tuilesdejeu",
+                                    );
 
-                    // chargement du calque pickupobjects
-                    const pickupobjects = carteDuNiveau.createLayer(
-                            "pickupobjects",
-                            tileset
-                            );
+                            // chargement du calque calque_plateformes
+                            const plateformes = carteDuNiveau.createLayer(
+                                    "plateformes",
+                                    tileset
+                                    );
 
-                    // chargement du calque obstacles
-                    const obstacles = carteDuNiveau.createLayer(
-                            "obstacles",
-                            tileset
-                            );
+                            // chargement du calque pickupobjects
+                            const pickupobjects = carteDuNiveau.createLayer(
+                                    "pickupobjects",
+                                    tileset
+                                    );
 
-                    // définition des tuiles de plateformes qui sont solides
-                    // utilisation de la propriété estSolide
-                    plateformes.setCollisionByProperty({ estSolide: true });
+                            // chargement du calque obstacles
+                            const obstacles = carteDuNiveau.createLayer(
+                                    "obstacles",
+                                    tileset
+                                    );
+                        
+                        // NIVEAU - Plateformes solides
+                        plateformes.setCollisionByProperty({ estSolide: true });
+                        
+                        // NIVEAU - limites du monde avec les dimensions calculées via tiled
+                        this.physics.world.setBounds(0, 0, 1600, 1600);
 
-                    // on génère le sprite du personnage à partir de la sprite sheet
-                    player = this.physics.add.sprite(1350, 680, 'perso');
+                        // PLAYER
+
+                            // PLAYER - génération du sprite du personnage à partir de la sprite sheet (png avec les animations du perso)
+                            player = this.physics.add.sprite(1350, 680, 'perso');
+                        
+                            // PLAYER - Collision entre le joueur et les confins du monde
+                            player.setCollideWorldBounds(true);
+
+                            // PLAYER - Collision entre le joueur et les plateformes
+                            this.physics.add.collider(player, plateformes); 
+                        
+                    // ANIMATIONS PLAYER
                     
-                    //Ajoute un rebond du joueur lors du contact au sol
-                    player.setBounce(0);
+                        // ANIMATIONS PLAYER - animation marche gauche
+                        this.anims.create({
+                            key: 'left',
+                            frames: this.anims.generateFrameNumbers('perso', {start:0,end:3}),
+                            frameRate: 10,
+                            repeat: -1
+                        });
 
-                    //Collision entre le joueur et les confins du monde
-                    player.setCollideWorldBounds(true);
+                        // ANIMATIONS PLAYER - face à la caméra
+                        this.anims.create({
+                            key: 'turn',
+                            frames: [ { key: 'perso', frame: 4 } ],
+                            frameRate: 20
+                        });
 
-                    //Collision entre le joueur et les plateformes
-                    this.physics.add.collider(player, plateformes); 
+                        // ANIMATIONS PLAYER - Marche droite
+                        this.anims.create({
+                            key: 'right',
+                            frames: this.anims.generateFrameNumbers('perso', {start:5,end:8}),
+                            frameRate: 10,
+                            repeat: -1
+                        });           
                     
-                    //Animations gauche, face à la caméra et droite
-                    this.anims.create({
-                        key: 'left',
-                        frames: this.anims.generateFrameNumbers('perso', {start:0,end:3}),
-                        frameRate: 10,
-                        repeat: -1
-                    });
+                    // COMMANDES
 
-                    this.anims.create({
-                        key: 'turn',
-                        frames: [ { key: 'perso', frame: 4 } ],
-                        frameRate: 20
-                    });
+                        // COMMANDES - DEPLACEMENTS HORIZONTAUX
+                        cursors = this.input.keyboard.createCursorKeys();
 
-                    this.anims.create({
-                        key: 'right',
-                        frames: this.anims.generateFrameNumbers('perso', {start:5,end:8}),
-                        frameRate: 10,
-                        repeat: -1
-                    });           
+                        // COMMANDES - SAUT (BARRE D'ESPACE)
+                        spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
                     
-                    cursors = this.input.keyboard.createCursorKeys();
+                    // CAMERA
 
-                    spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+                        // CAMERA - limite du champs de la caméra de taille identique à celle du monde
+                        this.cameras.main.setBounds(0, 0, 1600, 1600);
+                        
+                        // CAMERA - taille de la caméra
+                        this.cameras.main.setSize(1200, 750);
 
-                    // redimentionnement du monde avec les dimensions calculées via tiled
-                    this.physics.world.setBounds(0, 0, 1600, 1600);
-                    
-                    //  ajout du champs de la caméra de taille identique à celle du monde
-                    this.cameras.main.setBounds(0, 0, 1600, 1600);
-                    
-                    this.cameras.main.setSize(1200, 750);
+                        // CAMERA - Zoom de la camera
+                        this.cameras.main.setZoom(2, 2)
 
-                    this.cameras.main.setZoom(2.5, 2.5)
+                        // CAMERA - ancrage de la caméra sur le joueur (elle suit le joueur)
+                        this.cameras.main.startFollow(player); 
 
-                    // ancrage de la caméra sur le joueur
-                    this.cameras.main.startFollow(player); 
-
-                    //affiche un texte à l’écran, pour le score
+                    //affiche un texte à l’écran, pour le score - ! NON FONCTIONNEL !
                     scoreText=this.add.text(16,16,'score: 0',{fontSize:'32px',fill:'#000'});
                 }
 
-                //Fonction exécuter à chaque frame du jeu
+                //FONCTION UPDATE - à exécuter à chaque frame du jeu
                 function update(){
 
-                    if (cursors.left.isDown){ //si la touche gauche est appuyée
-                        player.setVelocityX(-150); //alors vitesse négative en X
-                        player.anims.play('left', true); //et animation => gauche
-                        }
-                        else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
-                        player.setVelocityX(150); //alors vitesse positive en X
-                        player.anims.play('right', true); //et animation => droite
-                        }
-                        else{ // sinon
-                        player.setVelocityX(0); //vitesse nulle
-                        player.anims.play('turn'); //animation fait face caméra
-                        }
+                    // DEPLACEMENT PLAYER
+                    
+                        // DEPLACEMENT PLAYER - GAUCHE
+                        if (cursors.left.isDown && bloqueAxeX == false){ //si la touche gauche est appuyée
+                            player.setVelocityX(-150); //alors vitesse négative en X
+                            player.anims.play('left', true); //et animation => gauche
+                            }
+                        
+                        // DEPLACEMENT PLAYER - DROITE
+                        else if (cursors.right.isDown && bloqueAxeX == false){ //sinon si la touche droite est appuyée
+                            player.setVelocityX(150); //alors vitesse positive en X
+                            player.anims.play('right', true); //et animation => droite
+                            }
+                        
+                        // DEPLACEMENT - IDLE
+                        else { 
+                            player.setVelocityX(0); //vitesse nulle
+                            player.anims.play('turn'); //animation fait face caméra
+                            }
+                        
+                        // DEPLACEMENT - SAUT
                         if ((cursors.up.isDown || spaceBar.isDown) && player.body.blocked.down){
-                        //si touche haut appuyée ET que le perso touche le sol
-                        player.setVelocityY(-300); //alors vitesse verticale négative
-                        //(on saute)
+                            //si touche haut appuyée ET que le perso touche le sol
+                            player.setVelocityY(-300); //alors vitesse verticale négative
+                            //(on saute)
+                            }
+                    
+
+                    function unlockAxeX(){
+                        bloqueAxeX = false;
+                    }
+
+                    // WALL GRAP PLAYER (on s'accroche au mur)
+                        if (cursors.left.isDown && player.body.blocked.left){
+                            player.setVelocityY(-10); 
+                            console.log("axe X = ", bloqueAxeX)
+
+                            if (cursors.up.isDown && player.body.blocked.left){
+                                player.setVelocityY(-300); //alors vitesse verticale négative
+                                player.setVelocityX(100); //alors vitesse horizontale positive
+                                bloqueAxeX = true;
+                                setTimeout(unlockAxeX, 1000);
+                                
+                                }
+
                         }
+
+
+
+
+
+                        
 
                     if (gameOver){return;}
                 }
