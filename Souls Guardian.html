@@ -6,7 +6,7 @@
         <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
         <link href="styles.css" media="all" rel="stylesheet" type="text/css" />
 
-        <style type="text/css"> body { margin: 0; }</style>
+        <style type="text/css"> body { margin: 0; }</style>>
     </head>
     <body>
         <script type="text/javascript">
@@ -21,7 +21,7 @@
                 physics: {
                     default: 'arcade',
                     arcade: {
-                    gravity: { y: 600 },
+                    gravity: { y: 300 },
                     debug: true
                     }},
 
@@ -54,6 +54,8 @@
                     var scoreText;
                     var gameOver = false;
                     var bloqueAxeX = false; 
+                    var commandesLocked = false;
+                    var wallJumpLocked = false;
 
                 // FONCTION CREATE - Gère le stade initial du jeu
 
@@ -103,7 +105,7 @@
 
                             // PLAYER - génération du sprite du personnage à partir de la sprite sheet (png avec les animations du perso)
                             player = this.physics.add.sprite(1350, 680, 'perso');
-                        
+
                             // PLAYER - Collision entre le joueur et les confins du monde
                             player.setCollideWorldBounds(true);
 
@@ -142,7 +144,12 @@
 
                         // COMMANDES - SAUT (BARRE D'ESPACE)
                         spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-                    
+
+                        keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+                        keyQ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+
+                        keyWallGrap = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+                                        
                     // CAMERA
 
                         // CAMERA - limite du champs de la caméra de taille identique à celle du monde
@@ -164,108 +171,183 @@
                 //FONCTION UPDATE - à exécuter à chaque frame du jeu
                 function update(){
 
-                    // DEPLACEMENT PLAYER
-                    
-                        // DEPLACEMENT PLAYER - GAUCHE
-                        if (cursors.left.isDown && bloqueAxeX == false){ //si la touche gauche est appuyée
-                            player.setVelocityX(-150); //alors vitesse négative en X
-                            player.anims.play('left', true); //et animation => gauche
-                            }
-                        
-                        // DEPLACEMENT PLAYER - DROITE
-                        else if (cursors.right.isDown && bloqueAxeX == false){ //sinon si la touche droite est appuyée
-                            player.setVelocityX(150); //alors vitesse positive en X
-                            player.anims.play('right', true); //et animation => droite
-                            }
-                        
-                        // DEPLACEMENT - IDLE
-                        else { 
-                            player.setVelocityX(0); //vitesse nulle
-                            player.anims.play('turn'); //animation fait face caméra
-                            }
-                        
-                        // DEPLACEMENT - SAUT
-                        if ((cursors.up.isDown || spaceBar.isDown) && player.body.blocked.down){
-                            //si touche haut appuyée ET que le perso touche le sol
-                            player.setVelocityY(-300); //alors vitesse verticale négative
-                            //(on saute)
-                            }
-                    
-
-                    
-
-                    // MURS
 
                     // Déverouillage des commandes
                     function lockCommandes(){
-                        commandesLocked = false;
-                    }
-
-                    // Déverouillage du wall Jump
-                    function lockWallJump(){
-                        wallJumpLocked = false;
-                    }
-
-                    // WALL GRAB PLAYER LEFT (on s'accroche au mur gauche)
-                    function wallGrabLeft(){
-                        player.setVelocityY(-10); 
-                        player.setVelocityX(-15);
-
-                        // WALL JUMP LEFT
-                        if (cursors.up.isDown && wallJumpLocked == false){
-                            
-                            // commandes bloquées
-                            commandesLocked = true;
-
-                            // wallJump bloqué
-                            wallJumpLocked = true;
-
-                            // personnage repoussé du mur
-                            player.setVelocityY(-300);
-                            player.setVelocityX(100);
-
-                            // commandes débloquées
-
-                            setTimeout(lockCommandes, 200);
-                            
-                            // wallJump débloqué
-
-                            setTimeout(lockWallJump, 2000)       
+                            commandesLocked = false;
                         }
-                    }
 
-                    // WALL GRAB PLAYER LEFT (on s'accroche au mur droit)
-                    function wallGrabRight(){
-                        player.setVelocityY(-10); 
-                        player.setVelocityX(15);
-
-                        // WALL JUMP LEFT
-                        if (cursors.up.isDown && wallJumpLocked == false){
+                        // Déverouillage du wall Jump
+                        function lockWallJump(){
                             
-                            // commandes bloquées
-                            commandesLocked = true;
-
-                            // wallJump bloqué
-                            wallJumpLocked = true;
-
-                            // personnage repoussé du mur
-                            player.setVelocityY(-300);
-                            player.setVelocityX(-100);
-
-                            // commandes débloquées
-
-                            setTimeout(lockCommandes, 200);
-                            
-                            // wallJump débloqué
-
-                            setTimeout(lockWallJump, 2000)       
+                            if(player.body.onFloor()){
+                                wallJumpLocked = true;
+                                
+                                // Coupe l'inertie du saut
+                                player.setAccelerationX(0);
+                            }
+                            else{
+                                wallJumpLocked = false;
+                                console.log("lock Commandes = ", wallJumpLocked);
+                            }
                         }
-                    }
+
+                    // DEPLACEMENT PLAYER
+                    
+                    function movementPlayer(){
+
+                            lockWallJump();
+
+                            // DEPLACEMENT PLAYER - GAUCHE
+                            if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
+                                player.setVelocityX(-150); //alors vitesse positive en X
+                                /*player.setVelocityX(-150); //alors vitesse négative en X*/
+                                if(player.body.onFloor()){
+                                    player.anims.play('left', true); //et animation => gauche
+                                    /*player.setAccelerationX(-300);*/
+                                }
+                                }
+                            
+                            // DEPLACEMENT PLAYER - DROITE
+                            else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
+                                player.setVelocityX(150); //alors vitesse positive en X
+
+                                if(player.body.onFloor()){
+                                    player.anims.play('right', true); //et animation => gauche
+                                    /*player.setAccelerationX(300);*/
+                                }
+                                }
+                            
+                            // DEPLACEMENT - IDLE
+                            else { 
+                                player.setVelocityX(0); //vitesse nulle
+                                player.anims.play('turn'); //animation fait face caméra
+                                }
+                            
+                            // DEPLACEMENT - SAUT
+                            if (cursors.up.isDown || spaceBar.isDown){
+
+                                // SAUT A TERRE
+                                if(player.body.onFloor()){
+                                //si touche haut appuyée ET que le perso touche le sol
+                                player.setVelocityY(-210); //alors vitesse verticale négative
+                                //(on saute)
+                                }
+                            }
+
+                            // SAUT MUR GAUCHE
+                            if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
+
+                                player.setVelocityY(-5);
+                                
+                                if (cursors.up.isDown || spaceBar.isDown){
+                                    player.setAccelerationX(4000);
+                                    player.setMaxVelocity(1000);
+                                    player.setVelocityY(-210);
+
+                                    // commandes bloquées
+                                    commandesLocked = true;
+                                    console.log(commandesLocked)
+                                    
+                                    // commandes débloquées
+                                    setTimeout(lockCommandes, 1000);
+                                }
+                            }
+
+                            // SAUT MUR DROIT
+                            if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
+
+                                player.setVelocityY(-5);
+                                
+                                if (cursors.up.isDown || spaceBar.isDown){
+                                    player.setAccelerationX(-4000);
+                                    player.setMaxVelocity(1000);
+                                    player.setVelocityY(-210);
+
+                                    // commandes bloquées
+                                    commandesLocked = true;
+                                    console.log(commandesLocked)
+
+                                    // commandes débloquées
+
+                                    setTimeout(lockCommandes, 1000);
+                                }
+                            }
+
+                        }
 
 
+                    // FONCTIONS WALL GRAP ET WALL JUMP
+
+                        /*function wallJump(){
+                            if (player.body.blocked.left){
+                                wallGrabLeft();
+                            }
+                            else if(player.body.blocked.right){
+                                wallGrabRight();
+                            }
+                        }*/
+
+                        // WALL GRAB PLAYER LEFT (on s'accroche au mur gauche)
+                        function wallGrabLeft(){
+                            /*player.setVelocityY(-10);*/ 
+
+                            // WALL JUMP LEFT
+                            /*if (player.body.onWall() && (spaceBar.isDown || cursors.up.isDown) && wallJumpLocked == false){
+                                
+                                // commandes bloquées
+                                commandesLocked = true;
+                                console.log(commandesLocked)
+
+                                // wallJump bloqué
+                                wallJumpLocked = true;
+
+                                // personnage repoussé du mur
 
 
-                        
+                                player.setVelocityY(-210);
+                                player.setAccelerationX(300);
+                                player.setAccelerationX(300);
+
+                                // commandes débloquées
+
+                                setTimeout(lockCommandes, 800);
+                                
+                                // wallJump débloqué
+
+                                setTimeout(lockWallJump, 800)       
+                            }
+                        }
+
+                        // WALL GRAB PLAYER LEFT (on s'accroche au mur droit)
+                        function wallGrabRight(){
+                            player.setVelocityY(-10);
+
+                            // WALL JUMP LEFT
+                            if (spaceBar.isDown && wallJumpLocked == false){
+                                
+                                // commandes bloquées
+                                commandesLocked = true;
+
+                                // wallJump bloqué
+                                wallJumpLocked = true;
+
+                                // personnage repoussé du mur
+                                player.setVelocityY(-160);
+                                player.setVelocityX(-50);
+
+                                // commandes débloquées
+
+                                setTimeout(lockCommandes, 2000);
+                                
+                                // wallJump débloqué
+
+                                setTimeout(lockWallJump, 2000)*/       
+                            }
+                    
+                    lockWallJump();
+                    movementPlayer();
+                      
 
                     if (gameOver){return;}
                 }
