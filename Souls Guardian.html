@@ -53,7 +53,6 @@
                     var cursors;
                     var scoreText;
                     var gameOver = false;
-                    var bloqueAxeX = false; 
                     var commandesLocked = false;
                     var wallJumpLocked = false;
 
@@ -73,7 +72,7 @@
 
                             // chargement du jeu de tuiles
                             const tileset = carteDuNiveau.addTilesetImage(
-                                    "PremierPlan",
+                                    "tuiles_de_jeu",
                                     "Phaser_tuilesdejeu",
                                     );
 
@@ -97,20 +96,23 @@
                         
                         // NIVEAU - Plateformes solides
                         plateformes.setCollisionByProperty({ estSolide: true });
+
+                        // NIVEAU - Obstacles mortels
+                        obstacles.setCollisionByProperty({ estMortel : true});
                         
                         // NIVEAU - limites du monde avec les dimensions calculées via tiled
                         this.physics.world.setBounds(0, 0, 1600, 1600);
 
                         // PLAYER
 
-                            // PLAYER - génération du sprite du personnage à partir de la sprite sheet (png avec les animations du perso)
-                            player = this.physics.add.sprite(1350, 680, 'perso');
+                            // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
+                            player = this.physics.add.sprite(1352, 680, 'perso');
 
                             // PLAYER - Collision entre le joueur et les confins du monde
                             player.setCollideWorldBounds(true);
 
                             // PLAYER - Collision entre le joueur et les plateformes
-                            this.physics.add.collider(player, plateformes); 
+                            this.physics.add.collider(player, plateformes);
                         
                     // ANIMATIONS PLAYER
                     
@@ -159,7 +161,7 @@
                         this.cameras.main.setSize(1200, 750);
 
                         // CAMERA - Zoom de la camera
-                        this.cameras.main.setZoom(2, 2)
+                        this.cameras.main.setZoom(1.5, 1.5)
 
                         // CAMERA - ancrage de la caméra sur le joueur (elle suit le joueur)
                         this.cameras.main.startFollow(player); 
@@ -196,6 +198,7 @@
                     
                     function movementPlayer(){
 
+                            // Verification continue que le joueur est au sol ou à l'air pour sauter 
                             lockWallJump();
 
                             // DEPLACEMENT PLAYER - GAUCHE
@@ -230,6 +233,8 @@
                                 // SAUT A TERRE
                                 if(player.body.onFloor()){
                                 //si touche haut appuyée ET que le perso touche le sol
+                                player.setAccelerationY(10);
+                                player.setMaxVelocity(210);
                                 player.setVelocityY(-210); //alors vitesse verticale négative
                                 //(on saute)
                                 }
@@ -239,6 +244,7 @@
                             if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
 
                                 player.setVelocityY(-5);
+                                player.setVelocityX(-2);
                                 
                                 if (cursors.up.isDown || spaceBar.isDown){
                                     player.setAccelerationX(4000);
@@ -258,6 +264,7 @@
                             if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
 
                                 player.setVelocityY(-5);
+                                player.setVelocityX(2);
                                 
                                 if (cursors.up.isDown || spaceBar.isDown){
                                     player.setAccelerationX(-4000);
@@ -269,83 +276,22 @@
                                     console.log(commandesLocked)
 
                                     // commandes débloquées
-
                                     setTimeout(lockCommandes, 1000);
                                 }
                             }
 
                         }
 
-
-                    // FONCTIONS WALL GRAP ET WALL JUMP
-
-                        /*function wallJump(){
-                            if (player.body.blocked.left){
-                                wallGrabLeft();
-                            }
-                            else if(player.body.blocked.right){
-                                wallGrabRight();
-                            }
-                        }*/
-
-                        // WALL GRAB PLAYER LEFT (on s'accroche au mur gauche)
-                        function wallGrabLeft(){
-                            /*player.setVelocityY(-10);*/ 
-
-                            // WALL JUMP LEFT
-                            /*if (player.body.onWall() && (spaceBar.isDown || cursors.up.isDown) && wallJumpLocked == false){
-                                
-                                // commandes bloquées
-                                commandesLocked = true;
-                                console.log(commandesLocked)
-
-                                // wallJump bloqué
-                                wallJumpLocked = true;
-
-                                // personnage repoussé du mur
-
-
-                                player.setVelocityY(-210);
-                                player.setAccelerationX(300);
-                                player.setAccelerationX(300);
-
-                                // commandes débloquées
-
-                                setTimeout(lockCommandes, 800);
-                                
-                                // wallJump débloqué
-
-                                setTimeout(lockWallJump, 800)       
-                            }
-                        }
-
-                        // WALL GRAB PLAYER LEFT (on s'accroche au mur droit)
-                        function wallGrabRight(){
-                            player.setVelocityY(-10);
-
-                            // WALL JUMP LEFT
-                            if (spaceBar.isDown && wallJumpLocked == false){
-                                
-                                // commandes bloquées
-                                commandesLocked = true;
-
-                                // wallJump bloqué
-                                wallJumpLocked = true;
-
-                                // personnage repoussé du mur
-                                player.setVelocityY(-160);
-                                player.setVelocityX(-50);
-
-                                // commandes débloquées
-
-                                setTimeout(lockCommandes, 2000);
-                                
-                                // wallJump débloqué
-
-                                setTimeout(lockWallJump, 2000)*/       
-                            }
                     
-                    lockWallJump();
+
+                    function respawn(){
+                        if (gameOver == true){
+
+                            //replace le joueur à la zone de départ
+                            player.body.reset(1352, 680);
+                        }
+                    }
+
                     movementPlayer();
                       
 
