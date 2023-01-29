@@ -192,25 +192,75 @@
                             }
                     
 
-                    function unlockAxeX(){
-                        bloqueAxeX = false;
+                    
+
+                    // MURS
+
+                    // Déverouillage des commandes
+                    function lockCommandes(){
+                        commandesLocked = false;
                     }
 
-                    // WALL GRAP PLAYER (on s'accroche au mur)
-                        if (cursors.left.isDown && player.body.blocked.left){
-                            player.setVelocityY(-10); 
-                            console.log("axe X = ", bloqueAxeX)
+                    // Déverouillage du wall Jump
+                    function lockWallJump(){
+                        wallJumpLocked = false;
+                    }
 
-                            if (cursors.up.isDown && player.body.blocked.left){
-                                player.setVelocityY(-300); //alors vitesse verticale négative
-                                player.setVelocityX(100); //alors vitesse horizontale positive
-                                bloqueAxeX = true;
-                                setTimeout(unlockAxeX, 1000);
-                                
-                                }
+                    // WALL GRAB PLAYER LEFT (on s'accroche au mur gauche)
+                    function wallGrabLeft(){
+                        player.setVelocityY(-10); 
+                        player.setVelocityX(-15);
 
+                        // WALL JUMP LEFT
+                        if (cursors.up.isDown && wallJumpLocked == false){
+                            
+                            // commandes bloquées
+                            commandesLocked = true;
+
+                            // wallJump bloqué
+                            wallJumpLocked = true;
+
+                            // personnage repoussé du mur
+                            player.setVelocityY(-300);
+                            player.setVelocityX(100);
+
+                            // commandes débloquées
+
+                            setTimeout(lockCommandes, 200);
+                            
+                            // wallJump débloqué
+
+                            setTimeout(lockWallJump, 2000)       
                         }
+                    }
 
+                    // WALL GRAB PLAYER LEFT (on s'accroche au mur droit)
+                    function wallGrabRight(){
+                        player.setVelocityY(-10); 
+                        player.setVelocityX(15);
+
+                        // WALL JUMP LEFT
+                        if (cursors.up.isDown && wallJumpLocked == false){
+                            
+                            // commandes bloquées
+                            commandesLocked = true;
+
+                            // wallJump bloqué
+                            wallJumpLocked = true;
+
+                            // personnage repoussé du mur
+                            player.setVelocityY(-300);
+                            player.setVelocityX(-100);
+
+                            // commandes débloquées
+
+                            setTimeout(lockCommandes, 200);
+                            
+                            // wallJump débloqué
+
+                            setTimeout(lockWallJump, 2000)       
+                        }
+                    }
 
 
 
