@@ -30,31 +30,50 @@
 
                 new Phaser.Game(config);
 
+                // VARIABLES - annonce des variables
+                let platforms;
+                let player;
+                let espritsLayer;
+                
+                let cursors;
+                
+                let health = 4;
+
+
+                let gameOver = false;
+                let commandesLocked = false;
+                let wallJumpLocked = false;
+                
+                let esprits;
+                let textScore;
+                let espritScore = 0;
+
                 // FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
 
                 function preload(){
+
+                    // Préchargement de l'UI
+                    this.load.image('lifeFull',"assets/Life_Full.png");
+                    this.load.image('life1',"assets/Life_Hurt_1.png");
+                    this.load.image('life2',"assets/Life_Hurt_2.png");
+                    this.load.image('life3',"assets/Life_Hurt_3.png");
+                    this.load.image('lifeDead',"assets/Life_Dead.png");
+
+                    this.load.image('espritUI', "assets/esprit.png")
+                    this.load.image('espritCollectible', 'assets/esprit_in_game.png')
                     
-                        // NIVEAU - Préchargement de la carte
+                    // NIVEAU - Préchargement de la carte
 
-                            // NIVEAU - chargement tuiles de jeu
-                            this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
+                        // NIVEAU - chargement tuiles de jeu
+                        this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
 
-                            // NIVEAU - chargement de la carte
-                            this.load.tilemapTiledJSON("carte", "assets/map.json");
-                            this.load.image('background', 'assets/background.png');
-                            this.load.image('secondPlan', 'assets/secondPlan.png'); 
-                            this.load.spritesheet('perso','assets/perso.png',
-                                { frameWidth: 32, frameHeight: 48 });
+                        // NIVEAU - chargement de la carte
+                        this.load.tilemapTiledJSON("carte", "assets/map.json");
+                        this.load.image('background', 'assets/background.png');
+                        this.load.image('secondPlan', 'assets/secondPlan.png'); 
+                        this.load.spritesheet('perso','assets/perso.png',
+                            { frameWidth: 32, frameHeight: 48 });
                     }
-
-                // VARIABLES - annonce des variables
-                    var platforms;
-                    var player;
-                    var cursors;
-                    var scoreText;
-                    var gameOver = false;
-                    var commandesLocked = false;
-                    var wallJumpLocked = false;
 
                 // FONCTION CREATE - Gère le stade initial du jeu
 
@@ -82,17 +101,13 @@
                                     tileset
                                     );
 
-                            // chargement du calque pickupobjects
-                            const pickupobjects = carteDuNiveau.createLayer(
-                                    "pickupobjects",
-                                    tileset
-                                    );
-
                             // chargement du calque obstacles
                             const obstacles = carteDuNiveau.createLayer(
                                     "obstacles",
                                     tileset
                                     );
+
+                            espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
                         
                         // NIVEAU - Plateformes solides
                         plateformes.setCollisionByProperty({ estSolide: true });
@@ -103,17 +118,45 @@
                         // NIVEAU - limites du monde avec les dimensions calculées via tiled
                         this.physics.world.setBounds(0, 0, 1600, 1600);
 
-                        // PLAYER
+                    //COLLECTIBLES
 
-                            // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
-                            player = this.physics.add.sprite(1352, 680, 'perso');
+                        esprits = this.physics.add.staticGroup();
 
-                            // PLAYER - Collision entre le joueur et les confins du monde
-                            player.setCollideWorldBounds(true);
+                        espritsLayer.forEach(object => {
+                        let obj = esprits.create(object.x, object.y, 'espritCollectible');
+                            obj.setScale(object.width/32, object.height/32);
+                            obj.body.width = object.width;
+                            obj.body.height = object.height;
+                        });
 
-                            // PLAYER - Collision entre le joueur et les plateformes
-                            this.physics.add.collider(player, plateformes);
-                        
+
+
+                    // PLAYER
+
+                        // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
+                        player = this.physics.add.sprite(1352, 680, 'perso');
+
+                        // PLAYER - Collision entre le joueur et les confins du monde
+                        player.setCollideWorldBounds(true);
+
+                        // PLAYER - Collision entre le joueur et les plateformes
+                        this.physics.add.collider(player, plateformes);
+                        this.physics.add.collider(player, obstacles, killPlayer, null, this);
+                        this.physics.add.overlap(player, esprits, collectEsprits, null, this);
+
+                        // RECOLTE ESPRITS
+
+                    // UI
+
+                        // LIFE
+                        lifeUI = this.add.sprite(0,0, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
+
+                        //affiche un texte à l’écran, pour les collectibles
+                        textScore =this.add.text(25,120,` : ${espritScore}`,{fontSize:'32px',fill:'#000'}).setOrigin(0,0).setScrollFactor(0);
+
+                        //affiche l'image du collectible
+                        espritUi =this.add.sprite(5, 105,'espritUI').setOrigin(0,0).setScrollFactor(0);
+
                     // ANIMATIONS PLAYER
                     
                         // ANIMATIONS PLAYER - animation marche gauche
@@ -160,142 +203,166 @@
                         // CAMERA - taille de la caméra
                         this.cameras.main.setSize(1200, 750);
 
-                        // CAMERA - Zoom de la camera
-                        this.cameras.main.setZoom(1.5, 1.5)
+                        // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
+                        /*this.cameras.main.setZoom(1, 1)*/
 
                         // CAMERA - ancrage de la caméra sur le joueur (elle suit le joueur)
                         this.cameras.main.startFollow(player); 
 
-                    //affiche un texte à l’écran, pour le score - ! NON FONCTIONNEL !
-                    scoreText=this.add.text(16,16,'score: 0',{fontSize:'32px',fill:'#000'});
                 }
 
+    // Déverouillage des commandes
+    function lockCommandes(){
+        commandesLocked = false;
+    }
+
+    // Déverouillage du wall Jump
+    function lockWallJump(){
+        
+        if(player.body.onFloor()){
+            wallJumpLocked = true;
+            
+            // Coupe l'inertie du saut
+            player.setAccelerationX(0);
+        }
+        else{
+            wallJumpLocked = false;
+            console.log("lock Commandes = ", wallJumpLocked);
+        }
+    }
+
+// DEPLACEMENT PLAYER
+
+function movementPlayer(){
+
+        // Verification continue que le joueur est au sol ou à l'air pour sauter 
+        lockWallJump();
+
+        // DEPLACEMENT PLAYER - GAUCHE
+        if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
+            player.setVelocityX(-150); //alors vitesse positive en X
+            /*player.setVelocityX(-150); //alors vitesse négative en X*/
+            if(player.body.onFloor()){
+                player.anims.play('left', true); //et animation => gauche
+                /*player.setAccelerationX(-300);*/
+            }
+            }
+        
+        // DEPLACEMENT PLAYER - DROITE
+        else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
+            player.setVelocityX(150); //alors vitesse positive en X
+
+            if(player.body.onFloor()){
+                player.anims.play('right', true); //et animation => gauche
+                /*player.setAccelerationX(300);*/
+            }
+            }
+        
+        // DEPLACEMENT - IDLE
+        else { 
+            player.setVelocityX(0); //vitesse nulle
+            player.anims.play('turn'); //animation fait face caméra
+            }
+        
+        // DEPLACEMENT - SAUT
+        if (cursors.up.isDown || spaceBar.isDown){
+
+            // SAUT A TERRE
+            if(player.body.onFloor()){
+            //si touche haut appuyée ET que le perso touche le sol
+            player.setAccelerationY(10);
+            player.setMaxVelocity(210);
+            player.setVelocityY(-210); //alors vitesse verticale négative
+            //(on saute)
+            }
+        }
+
+        // SAUT MUR GAUCHE
+        if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
+
+            player.setVelocityY(-5);
+            player.setVelocityX(-2);
+            
+            if (cursors.up.isDown || spaceBar.isDown){
+                player.setAccelerationX(4000);
+                player.setMaxVelocity(1000);
+                player.setVelocityY(-210);
+
+                // commandes bloquées
+                commandesLocked = true;
+                console.log(commandesLocked)
+                
+                // commandes débloquées
+                setTimeout(lockCommandes, 1000);
+            }
+        }
+
+        // SAUT MUR DROIT
+        if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
+
+            player.setVelocityY(-5);
+            player.setVelocityX(2);
+            
+            if (cursors.up.isDown || spaceBar.isDown){
+                player.setAccelerationX(-4000);
+                player.setMaxVelocity(1000);
+                player.setVelocityY(-210);
+
+                // commandes bloquées
+                commandesLocked = true;
+                console.log(commandesLocked)
+
+                // commandes débloquées
+                setTimeout(lockCommandes, 1000);
+            }
+        }
+    }
+
+function killPlayer(){
+    gameOver = true;
+    console.log("Check death 1");
+}
+
+function collectEsprits(player, esprit){
+    esprit.destroy(esprit.x, esprit.y);
+    espritScore ++; // increment the score
+    textScore.setText(` : ${espritScore}`); // set the text to show the current score
+    return false;
+}
+
+
+function respawn(){
+    if (gameOver == true){
+
+        lifeUI.setTexture('lifeDead');
+
+        console.log("Check death 2");
+
+        //replace le joueur à la zone de départ
+        
+        /*setTimeout(player.body.reset(1352, 680), 8000);*/
+
+        setTimeout(function() {player.body.reset(1352, 680);
+        gameOver = false;
+        lifeUI.setTexture('lifeFull');
+        
+        }, 8000);
+
+
+    }
+}
                 //FONCTION UPDATE - à exécuter à chaque frame du jeu
                 function update(){
 
 
-                    // Déverouillage des commandes
-                    function lockCommandes(){
-                            commandesLocked = false;
-                        }
-
-                        // Déverouillage du wall Jump
-                        function lockWallJump(){
-                            
-                            if(player.body.onFloor()){
-                                wallJumpLocked = true;
-                                
-                                // Coupe l'inertie du saut
-                                player.setAccelerationX(0);
-                            }
-                            else{
-                                wallJumpLocked = false;
-                                console.log("lock Commandes = ", wallJumpLocked);
-                            }
-                        }
-
-                    // DEPLACEMENT PLAYER
                     
-                    function movementPlayer(){
-
-                            // Verification continue que le joueur est au sol ou à l'air pour sauter 
-                            lockWallJump();
-
-                            // DEPLACEMENT PLAYER - GAUCHE
-                            if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
-                                player.setVelocityX(-150); //alors vitesse positive en X
-                                /*player.setVelocityX(-150); //alors vitesse négative en X*/
-                                if(player.body.onFloor()){
-                                    player.anims.play('left', true); //et animation => gauche
-                                    /*player.setAccelerationX(-300);*/
-                                }
-                                }
-                            
-                            // DEPLACEMENT PLAYER - DROITE
-                            else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
-                                player.setVelocityX(150); //alors vitesse positive en X
-
-                                if(player.body.onFloor()){
-                                    player.anims.play('right', true); //et animation => gauche
-                                    /*player.setAccelerationX(300);*/
-                                }
-                                }
-                            
-                            // DEPLACEMENT - IDLE
-                            else { 
-                                player.setVelocityX(0); //vitesse nulle
-                                player.anims.play('turn'); //animation fait face caméra
-                                }
-                            
-                            // DEPLACEMENT - SAUT
-                            if (cursors.up.isDown || spaceBar.isDown){
-
-                                // SAUT A TERRE
-                                if(player.body.onFloor()){
-                                //si touche haut appuyée ET que le perso touche le sol
-                                player.setAccelerationY(10);
-                                player.setMaxVelocity(210);
-                                player.setVelocityY(-210); //alors vitesse verticale négative
-                                //(on saute)
-                                }
-                            }
-
-                            // SAUT MUR GAUCHE
-                            if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
-
-                                player.setVelocityY(-5);
-                                player.setVelocityX(-2);
-                                
-                                if (cursors.up.isDown || spaceBar.isDown){
-                                    player.setAccelerationX(4000);
-                                    player.setMaxVelocity(1000);
-                                    player.setVelocityY(-210);
-
-                                    // commandes bloquées
-                                    commandesLocked = true;
-                                    console.log(commandesLocked)
-                                    
-                                    // commandes débloquées
-                                    setTimeout(lockCommandes, 1000);
-                                }
-                            }
-
-                            // SAUT MUR DROIT
-                            if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
-
-                                player.setVelocityY(-5);
-                                player.setVelocityX(2);
-                                
-                                if (cursors.up.isDown || spaceBar.isDown){
-                                    player.setAccelerationX(-4000);
-                                    player.setMaxVelocity(1000);
-                                    player.setVelocityY(-210);
-
-                                    // commandes bloquées
-                                    commandesLocked = true;
-                                    console.log(commandesLocked)
-
-                                    // commandes débloquées
-                                    setTimeout(lockCommandes, 1000);
-                                }
-                            }
-
-                        }
-
-                    
-
-                    function respawn(){
-                        if (gameOver == true){
-
-                            //replace le joueur à la zone de départ
-                            player.body.reset(1352, 680);
-                        }
-                    }
 
                     movementPlayer();
+                    respawn();
+
                       
 
-                    if (gameOver){return;}
+                    /*if (gameOver){return;}*/
                 }
         </script>
     </body>
