@@ -48,6 +48,12 @@
                 let textScore;
                 let espritScore = 0;
 
+                let speedMoveX = 150;
+                let speedMoveY = 210;
+                let playerInertie = 0;
+
+                let wallIce = false;
+
                 // FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
 
                 function preload(){
@@ -101,6 +107,20 @@
                                     tileset
                                     );
 
+                            // chargement calque neige
+
+                            const plateformesNeige = carteDuNiveau.createLayer(
+                                    "plateformesNeige",
+                                    tileset
+                                    );
+
+                            // chargement calque glace
+
+                            const plateformesGlace = carteDuNiveau.createLayer(
+                                    "plateformesGlace",
+                                    tileset
+                                    );
+
                             // chargement du calque obstacles
                             const obstacles = carteDuNiveau.createLayer(
                                     "obstacles",
@@ -110,7 +130,16 @@
                             espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
                         
                         // NIVEAU - Plateformes solides
-                        plateformes.setCollisionByProperty({ estSolide: true });
+                        plateformes.setCollisionByProperty({estSolide: true });
+
+                        plateformesNeige.setCollisionByProperty({estNeige : true });
+
+                        plateformesGlace.setCollisionByProperty({estGlace : true });
+
+                        /*neigeRalentit = this.physics.add.group();
+                        calque_ObjetRalentisseur = carteDuNiveau.getObjectLayer('ObjetRalentisseur');
+                        calque_ObjetRalentisseur.objects.forEach( calque_ObjetRalentisseur => {
+                        const PORalentisseur = neigeRalentit.create( calque_ObjetRalentisseur.x + 16, calque_ObjetRalentisseur.y + 15, "TextureRalentisseur").body.setAllowGravity(false).setImmovable(true);*/
 
                         // NIVEAU - Obstacles mortels
                         obstacles.setCollisionByProperty({ estMortel : true});
@@ -134,14 +163,20 @@
                     // PLAYER
 
                         // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
-                        player = this.physics.add.sprite(1352, 680, 'perso');
+                        player = this.physics.add.sprite(1500, 50, 'perso');
 
                         // PLAYER - Collision entre le joueur et les confins du monde
                         player.setCollideWorldBounds(true);
 
                         // PLAYER - Collision entre le joueur et les plateformes
-                        this.physics.add.collider(player, plateformes);
+                        this.physics.add.collider(player, plateformes, normalPlatsProperties, null, this);
+
+                        this.physics.add.collider(player, plateformesNeige, neigePlatsProperties, null, this);
+
+                        this.physics.add.collider(player, plateformesGlace, glacePlatsProperties, null, this);
+                        
                         this.physics.add.collider(player, obstacles, killPlayer, null, this);
+
                         this.physics.add.overlap(player, esprits, collectEsprits, null, this);
 
                         // RECOLTE ESPRITS
@@ -211,25 +246,54 @@
 
                 }
 
-    // Déverouillage des commandes
-    function lockCommandes(){
-        commandesLocked = false;
-    }
+// Déverouillage des commandes
+function lockCommandes(){
+    commandesLocked = false;
+}
 
-    // Déverouillage du wall Jump
-    function lockWallJump(){
+// Déverouillage du wall Jump
+function lockWallJump(){
+    
+    if(player.body.onFloor()){
+        wallJumpLocked = true;
         
-        if(player.body.onFloor()){
-            wallJumpLocked = true;
-            
-            // Coupe l'inertie du saut
-            player.setAccelerationX(0);
-        }
-        else{
-            wallJumpLocked = false;
-            console.log("lock Commandes = ", wallJumpLocked);
-        }
+        // Coupe l'inertie du saut
+        /*player.setAccelerationX(0);*/
     }
+    else{
+        wallJumpLocked = false;
+    }
+}
+
+//Gestion du ralentissement sur les ralentisseurs
+function normalPlatsProperties() {
+    speedMoveX = 150;
+    speedMoveY = 210;
+    playerInertie = 0;
+    wallIce = false;
+
+    console.log("check wallIce + ", wallIce);
+}
+
+neigeRalentissement
+
+function neigePlatsProperties() {
+    speedMoveX = 100;
+    speedMoveY = 210;
+    playerInertie = 0;
+    wallIce = false;
+
+    console.log("check wallIce + ", wallIce);
+}
+
+function glacePlatsProperties() {
+    speedMoveX = 150;
+    speedMoveY = 210;
+    playerInertie = 3000;
+    wallIce = true;
+
+    console.log("check wallIce + ", wallIce);
+}
 
 // DEPLACEMENT PLAYER
 
@@ -240,21 +304,21 @@ function movementPlayer(){
 
         // DEPLACEMENT PLAYER - GAUCHE
         if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
-            player.setVelocityX(-150); //alors vitesse positive en X
+            player.setVelocityX(-speedMoveX); //alors vitesse positive en X
             /*player.setVelocityX(-150); //alors vitesse négative en X*/
             if(player.body.onFloor()){
                 player.anims.play('left', true); //et animation => gauche
-                /*player.setAccelerationX(-300);*/
+                player.setAccelerationX(-playerInertie);
             }
             }
         
         // DEPLACEMENT PLAYER - DROITE
         else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
-            player.setVelocityX(150); //alors vitesse positive en X
+            player.setVelocityX(speedMoveX); //alors vitesse positive en X
 
             if(player.body.onFloor()){
                 player.anims.play('right', true); //et animation => gauche
-                /*player.setAccelerationX(300);*/
+                player.setAccelerationX(playerInertie);
             }
             }
         
@@ -271,8 +335,8 @@ function movementPlayer(){
             if(player.body.onFloor()){
             //si touche haut appuyée ET que le perso touche le sol
             player.setAccelerationY(10);
-            player.setMaxVelocity(210);
-            player.setVelocityY(-210); //alors vitesse verticale négative
+            player.setMaxVelocity(speedMoveY);
+            player.setVelocityY(-speedMoveY); //alors vitesse verticale négative
             //(on saute)
             }
         }
@@ -280,13 +344,19 @@ function movementPlayer(){
         // SAUT MUR GAUCHE
         if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
 
-            player.setVelocityY(-5);
-            player.setVelocityX(-2);
+            if(wallIce == true){
+                player.setVelocityY(20);
+                player.setVelocityX(0);
+            }
+            else if(wallIce == false){
+                player.setVelocityY(-5);
+                player.setVelocityX(-2);
+            }
             
             if (cursors.up.isDown || spaceBar.isDown){
                 player.setAccelerationX(4000);
                 player.setMaxVelocity(1000);
-                player.setVelocityY(-210);
+                player.setVelocityY(-speedMoveY);
 
                 // commandes bloquées
                 commandesLocked = true;
@@ -300,13 +370,19 @@ function movementPlayer(){
         // SAUT MUR DROIT
         if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
 
-            player.setVelocityY(-5);
-            player.setVelocityX(2);
+            if(wallIce == true){
+                player.setVelocityY(20);
+                player.setVelocityX(0);
+            }
+            else if(wallIce == false){
+                player.setVelocityY(-5);
+                player.setVelocityX(2);
+            }
             
             if (cursors.up.isDown || spaceBar.isDown){
                 player.setAccelerationX(-4000);
                 player.setMaxVelocity(1000);
-                player.setVelocityY(-210);
+                player.setVelocityY(-speedMoveY);
 
                 // commandes bloquées
                 commandesLocked = true;
