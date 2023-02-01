@@ -65,8 +65,10 @@
                     this.load.image('life3',"assets/Life_Hurt_3.png");
                     this.load.image('lifeDead',"assets/Life_Dead.png");
 
-                    this.load.image('espritUI', "assets/esprit.png")
-                    this.load.image('espritCollectible', 'assets/esprit_in_game.png')
+                    this.load.image('fond_score', 'assets/fond_chiffre.png');
+
+                    this.load.image('espritUI', "assets/esprit.png");
+                    this.load.image('espritCollectible', 'assets/esprit_in_game.png');
                     
                     // NIVEAU - Préchargement de la carte
 
@@ -102,8 +104,8 @@
                             'secondPlan'
                         );*/
 
-                        this.add.image(800, 800, 'background').setScrollFactorX(0.05);
-                        this.add.image(800, 800, 'secondPlan').setScrollFactorX(0.3);
+                        this.add.image(800, 800, 'background')/*.setScrollFactorX(0.05)*/;
+                        this.add.image(800, 800, 'secondPlan')/*.setScrollFactorX(0.3)*/;
 
                         // NIVEAU - Intégration de la map de TILED
                             // chargement de la carte
@@ -177,7 +179,7 @@
                     // PLAYER
 
                         // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
-                        player = this.physics.add.sprite(1500, 50, 'perso');
+                        player = this.physics.add.sprite(1352, 680, 'perso');
 
                         // PLAYER - Collision entre le joueur et les confins du monde
                         player.setCollideWorldBounds(true);
@@ -200,11 +202,15 @@
                         // LIFE
                         lifeUI = this.add.sprite(0,0, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
 
+                        fondScore = this.add.sprite(1108,-6, 'fond_score').setOrigin(0,0).setScrollFactor(0);
+
                         //affiche un texte à l’écran, pour les collectibles
-                        textScore =this.add.text(25,120,` : ${espritScore}`,{fontSize:'32px',fill:'#000'}).setOrigin(0,0).setScrollFactor(0);
+                        textScore =this.add.text(1150,50,`${espritScore}`,{fontSize:'32px',fill:'#FFFFFF'}).setOrigin(0,0).setScrollFactor(0);
 
                         //affiche l'image du collectible
-                        espritUi =this.add.sprite(5, 105,'espritUI').setOrigin(0,0).setScrollFactor(0);
+                        espritUi =this.add.sprite(1100, 40,'espritUI').setOrigin(0,0).setScrollFactor(0);
+
+                        
 
                     // ANIMATIONS PLAYER
                     
@@ -416,7 +422,7 @@ function killPlayer(){
 function collectEsprits(player, esprit){
     esprit.destroy(esprit.x, esprit.y);
     espritScore ++; // increment the score
-    textScore.setText(` : ${espritScore}`); // set the text to show the current score
+    textScore.setText(`${espritScore}`); // set the text to show the current score
     return false;
 }
 
