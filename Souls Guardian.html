@@ -88,8 +88,22 @@
                     // NIVEAU
 
                         // NIVEAU - ajout des images de background
-                        this.add.image(800, 800, 'background');
-                        this.add.image(800, 800, 'secondPlan');
+
+                        /*this.background = this.game.add.tileSprite(0,
+                            this.game.height - this.game.cache.getImage('background').height,
+                            this.game.width,
+                            this.game.cache.getImage('background').height,
+                            'background'
+                        );
+                        this.secondPlan = this.game.add.tileSprite(0,
+                            this.game.height - this.game.cache.getImage('secondPlan').height,
+                            this.game.width,
+                            this.game.cache.getImage('secondPlan').height,
+                            'secondPlan'
+                        );*/
+
+                        this.add.image(800, 800, 'background').setScrollFactorX(0.05);
+                        this.add.image(800, 800, 'secondPlan').setScrollFactorX(0.3);
 
                         // NIVEAU - Intégration de la map de TILED
                             // chargement de la carte
@@ -429,6 +443,9 @@ function respawn(){
 }
                 //FONCTION UPDATE - à exécuter à chaque frame du jeu
                 function update(){
+
+                    /*this.background.tilePosition.x -= 0.05;*/
+                    /*this.secondPlan.tilePosition.x -= 0.3;*/
 
 
                     
