@@ -83,6 +83,12 @@
                             { frameWidth: 32, frameHeight: 48 });
                     }
 
+                    // Préchargement apparence monstre
+                    this.load.image('monsterRightApparence', 'assets/monstre_right.png');
+                    this.load.image('monsterLeftApparence', 'assets/monstre_left.png');
+
+                    this.load.image('BordureEnnemi', 'assets/perso2.png');
+
                 // FONCTION CREATE - Gère le stade initial du jeu
 
                 function create(){
@@ -91,21 +97,16 @@
 
                         // NIVEAU - ajout des images de background
 
-                        /*this.background = this.game.add.tileSprite(0,
-                            this.game.height - this.game.cache.getImage('background').height,
-                            this.game.width,
-                            this.game.cache.getImage('background').height,
-                            'background'
-                        );
-                        this.secondPlan = this.game.add.tileSprite(0,
-                            this.game.height - this.game.cache.getImage('secondPlan').height,
-                            this.game.width,
-                            this.game.cache.getImage('secondPlan').height,
-                            'secondPlan'
-                        );*/
+                        this.backgroundParallax = this.add.tileSprite(0, 0, 1600, 1600, "background");
+                        this.backgroundParallax.setOrigin(0, 0);
+                        this.backgroundParallax.setScrollFactor(0.5, 1);
 
-                        this.add.image(800, 800, 'background')/*.setScrollFactorX(0.05)*/;
-                        this.add.image(800, 800, 'secondPlan')/*.setScrollFactorX(0.3)*/;
+                        this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
+                        this.sndPlanParallax.setOrigin(0, 0);
+                        this.sndPlanParallax.setScrollFactor(0.9, 1);
+
+                        /*this.add.image(800, 800, 'background')/*.setScrollFactorX(0.05)*/;
+                        /*this.add.image(800, 800, 'secondPlan')/*.setScrollFactorX(0.3)*/;
 
                         // NIVEAU - Intégration de la map de TILED
                             // chargement de la carte
@@ -143,8 +144,9 @@
                                     tileset
                                     );
 
+                            esprits = this.physics.add.staticGroup();
                             espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
-                        
+
                         // NIVEAU - Plateformes solides
                         plateformes.setCollisionByProperty({estSolide: true });
 
@@ -165,21 +167,42 @@
 
                     //COLLECTIBLES
 
-                        esprits = this.physics.add.staticGroup();
-
                         espritsLayer.forEach(object => {
-                        let obj = esprits.create(object.x, object.y, 'espritCollectible');
+                        let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
                             obj.setScale(object.width/32, object.height/32);
                             obj.body.width = object.width;
                             obj.body.height = object.height;
                         });
 
+                    //Création monstre droite
+                    
+                    monstresRight = this.physics.add.group();
+                    monstresRightLayer = carteDuNiveau.getObjectLayer('monsterRightApparence');
+                    monstresRightLayer.objects.forEach( monstresRightLayer => {
+                        const MmonstresRightLayer = monstresRight.create( monstresRightLayer.x + 16, monstresRightLayer.y + 16, "monsterRightApparence").body.setAllowGravity(false).setBounce(1);
+                    });
+                    monstresRight.setVelocity(0, 150);
 
+                    //Création monstre gauche
+
+                    monstresLeft = this.physics.add.group();
+                    monstresLeftLayer = carteDuNiveau.getObjectLayer('monsterLeftApparence');
+                    monstresLeftLayer.objects.forEach( monstresLeftLayer => {
+                        const MMonstresLeftLayer = monstresLeft.create( monstresLeftLayer.x + 16, monstresLeftLayer.y + 16, "monsterLeftApparence").body.setAllowGravity(false).setBounce(1);
+                    });
+                    monstresLeft.setVelocity(0, 150);
+
+                    //Création des Bordures délimitant les déplacements des Ennemis
+                    limitesMonstres = this.physics.add.group();
+                    limitesMonstresLayer = carteDuNiveau.getObjectLayer('BordureEnnemi');
+                    limitesMonstresLayer.objects.forEach( limitesMonstresLayer => {
+                        const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16, "BordureEnnemi").body.setAllowGravity(false).setImmovable(true);
+                    });                
 
                     // PLAYER
 
                         // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
-                        player = this.physics.add.sprite(1352, 680, 'perso');
+                        player = this.physics.add.sprite(10, 10, 'perso');
 
                         // PLAYER - Collision entre le joueur et les confins du monde
                         player.setCollideWorldBounds(true);
@@ -277,8 +300,10 @@ function lockWallJump(){
     if(player.body.onFloor()){
         wallJumpLocked = true;
         
+        if(wallIce == false){
         // Coupe l'inertie du saut
-        /*player.setAccelerationX(0);*/
+        player.setAccelerationX(playerInertie);
+        }
     }
     else{
         wallJumpLocked = false;
@@ -330,7 +355,7 @@ function movementPlayer(){
                 player.anims.play('left', true); //et animation => gauche
                 player.setAccelerationX(-playerInertie);
             }
-            }
+        }
         
         // DEPLACEMENT PLAYER - DROITE
         else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
@@ -340,13 +365,13 @@ function movementPlayer(){
                 player.anims.play('right', true); //et animation => gauche
                 player.setAccelerationX(playerInertie);
             }
-            }
+        }
         
         // DEPLACEMENT - IDLE
         else { 
             player.setVelocityX(0); //vitesse nulle
             player.anims.play('turn'); //animation fait face caméra
-            }
+        }
         
         // DEPLACEMENT - SAUT
         if (cursors.up.isDown || spaceBar.isDown){
