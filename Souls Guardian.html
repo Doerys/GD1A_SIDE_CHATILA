@@ -31,7 +31,7 @@
 
                 new Phaser.Game(config);
 
-// VARIABLES - annonce des variables
+// VARIABLES
 let platforms;
 let player;
 let espritsLayer;
@@ -85,6 +85,18 @@ function preload(){
 
     // OBSTACLES
         this.load.image('cristauxImage', 'assets/cristaux.png');
+
+        this.load.image('picsBas', 'assets/picsBas.png');
+        this.load.image('picsHaut', 'assets/picsHaut.png');
+        this.load.image('picsDroite', 'assets/picsDroite.png');
+        this.load.image('picsGauche', 'assets/picsGauche.png');
+
+        this.load.image('lave', 'assets/lava.png');
+        
+        this.load.image('picsGlaceBas', 'assets/picsGlaceBas.png');        
+        this.load.image('picsGlaceHaut', 'assets/picsGlaceHaut.png');
+        this.load.image('picsGlaceDroite', 'assets/picsGlaceDroite.png');
+        this.load.image('picsGlaceGauche', 'assets/picsGlaceGauche.png');
 
     // MOBS
         // Préchargement apparence monstre
@@ -193,6 +205,142 @@ function create(){
                 
                     // collisions
                     this.physics.add.overlap(player, cristaux, killPlayer, null, this);
+
+                // PICS BAS
+
+                    //récupération
+                    picsBas = this.physics.add.staticGroup();
+                    picsBasLayer = carteDuNiveau.getObjectLayer('picsBasLayer')['objects'];
+                    
+                        // creation
+                        picsBasLayer.forEach(object => {
+                            let obj = picsBas.create(object.x + 16, object.y -16, 'picsBasImage');
+                            obj.setScale(object.width/32, object.height/32);
+                            obj.body.width = object.width;
+                            obj.body.height = object.height;
+                        });
+                    
+                        // collisions
+                        this.physics.add.overlap(player, picsBas, killPlayer, null, this);
+        
+                // PICS HAUT
+
+                    //récupération
+                    picsHaut = this.physics.add.staticGroup();
+                    picsHautLayer = carteDuNiveau.getObjectLayer('picsHautLayer')['objects'];
+                    
+                    // creation
+                    picsHautLayer.forEach(object => {
+                        let obj = picsHaut.create(object.x + 16, object.y -16, 'picsHautImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsHaut, killPlayer, null, this);
+
+                // PICS DROITE
+
+                    //récupération
+                    picsDroite = this.physics.add.staticGroup();
+                    picsDroiteLayer = carteDuNiveau.getObjectLayer('picsDroiteLayer')['objects'];
+                    
+                    // creation
+                    picsDroiteLayer.forEach(object => {
+                        let obj = picsDroite.create(object.x + 16, object.y -16, 'picsDroiteImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsDroite, killPlayer, null, this);
+
+                // PICS GAUCHE
+
+                    //récupération
+                    picsGauche = this.physics.add.staticGroup();
+                    picsGaucheLayer = carteDuNiveau.getObjectLayer('picsGaucheLayer')['objects'];
+                    
+                    // creation
+                    picsGaucheLayer.forEach(object => {
+                        let obj = picsGauche.create(object.x + 16, object.y -16, 'picsGaucheImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsGauche, killPlayer, null, this);
+
+                // LAVE
+
+                    //récupération
+                    lave = this.physics.add.staticGroup();
+                    laveLayer = carteDuNiveau.getObjectLayer('laveLayer')['objects'];
+                    
+                    // creation
+                    laveLayer.forEach(object => {
+                        let obj = lave.create(object.x + 16, object.y -16, 'laveImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, lave, killPlayer, null, this);
+
+                // PICS GLACE BAS
+
+                    //récupération
+                    picsGlaceBas = this.physics.add.staticGroup();
+                    picsGlaceBasLayer = carteDuNiveau.getObjectLayer('picsGlaceBasLayer')['objects'];
+                    
+                    // creation
+                    picsGlaceBasLayer.forEach(object => {
+                        let obj = picsGlaceBas.create(object.x + 16, object.y -16, 'picsGlaceBasImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsGlaceBas, killPlayer, null, this);
+
+                // PICS GLACE DROITE
+
+                    //récupération
+                    picsGlaceDroite = this.physics.add.staticGroup();
+                    picsGlaceDroiteLayer = carteDuNiveau.getObjectLayer('picsGlaceDroiteLayer')['objects'];
+                    
+                    // creation
+                    picsGlaceDroiteLayer.forEach(object => {
+                        let obj = picsGlaceDroite.create(object.x + 16, object.y -16, 'picsGlaceDroiteImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsGlaceDroite, killPlayer, null, this);
+
+                // PICS GLACE GAUCHE
+
+                    //récupération
+                    picsGlaceGauche = this.physics.add.staticGroup();
+                    picsGlaceGaucheLayer = carteDuNiveau.getObjectLayer('picsGlaceGaucheLayer')['objects'];
+                    
+                    // creation
+                    picsGlaceGaucheLayer.forEach(object => {
+                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsGlaceGauche, killPlayer, null, this);
 
             //MOBS 
                 // MONSTRES VERS DROITE
