@@ -14,7 +14,7 @@
             var config = {
                 type: Phaser.AUTO,
 
-                // Dimensions du jeu (50 x 50 cases de 32 pixels)
+                // Dimensions de l'espace de la fenêtre alloué au jeu
                 width: 1200, height: 750,
                 
                 // Physique du jeu (gravité)
@@ -25,380 +25,468 @@
                     debug: true
                     }},
 
+                input:{gamepad:true},
                 scene: {preload: preload, create: create, update: update }
                 };
 
                 new Phaser.Game(config);
 
-                // VARIABLES - annonce des variables
-                let platforms;
-                let player;
-                let espritsLayer;
+// VARIABLES - annonce des variables
+let platforms;
+let player;
+let espritsLayer;
+
+let cursors;
+
+let health = 4;
+let frameInvincible = 0;
+let invincibleOn = false;
+
+let gameOver = false;
+let commandesLocked = false;
+let wallJumpLocked = false;
+
+let esprits;
+let textScore;
+let espritScore = 0;
+
+let speedMoveX = 150;
+let speedMoveY = 210;
+let playerInertie = 0;
+
+let wallIce = false;
+
+// FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
+function preload(){
+
+    // Player
+    this.load.spritesheet('perso','assets/perso.png',
+        { frameWidth: 32, frameHeight: 48 });
+
+    // BACKGROUND
+    this.load.image('background', 'assets/background.png');
+    this.load.image('secondPlan', 'assets/secondPlan.png'); 
+
+    // UI
+        // UI - LIFE
+            this.load.image('lifeFull',"assets/Life_Full.png");
+            this.load.image('life1',"assets/Life_Hurt_1.png");
+            this.load.image('life2',"assets/Life_Hurt_2.png");
+            this.load.image('life3',"assets/Life_Hurt_3.png");
+            this.load.image('lifeDead',"assets/Life_Dead.png");
+
+        // UI - ESPRITS
+            this.load.image('fond_score', 'assets/fond_chiffre.png');
+            this.load.image('espritUI', "assets/esprit.png");
+
+    // PLATEFORMES
+        this.load.tilemapTiledJSON("carte", "assets/map.json");
+        this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
+
+    // OBSTACLES
+        this.load.image('cristauxImage', 'assets/cristaux.png');
+
+    // MOBS
+        // Préchargement apparence monstre
+            this.load.image('monsterRightApparence', 'assets/monstre_right.png');
+            this.load.image('monsterLeftApparence', 'assets/monstre_left.png');
+
+    // PICK UPS OBJECTS
+    this.load.image('espritCollectible', 'assets/esprit_in_game.png');
+
+    // ----------------------------------------------------- FIN FONCTION PRELOAD ----------------------------------------------
+
+}
+
+// FONCTION CREATE - Gère le stade initial du jeu
+function create(){
+
+    // ARRIERE PLAN
+
+        // ARRIERE PLAN - BACKGROUND
+        this.backgroundParallax = this.add.tileSprite(0, 0, 1600, 1600, "background");
+        this.backgroundParallax.setOrigin(0, 0);
+        this.backgroundParallax.setScrollFactor(0.5, 1);
+
+        // ARRIERE PLAN - SECOND PLAN
+        this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
+        this.sndPlanParallax.setOrigin(0, 0);
+        this.sndPlanParallax.setScrollFactor(0.9, 1);
+
+    // PLAYER
+        player = this.physics.add.sprite(1352, 680, 'perso');
+
+    // MAP DE TILED
+        // TILEMAP    
+            const carteDuNiveau = this.add.tilemap("carte");
+
+        // TILESET
+            const tileset = carteDuNiveau.addTilesetImage(
+                "tuiles_de_jeu",
+                "Phaser_tuilesdejeu",
+                );
+
+            // PLATEFORMES NORMALES []
+                const plateformes = carteDuNiveau.createLayer(
+                    "plateformes",
+                    tileset
+                    );
+
+                // collisions
+                plateformes.setCollisionByProperty({estSolide: true });
+                this.physics.add.collider(player, plateformes, normalPlatsProperties, null, this);
+
+
+            // PLATEFORMES NEIGE **
+                const plateformesNeige = carteDuNiveau.createLayer(
+                    "plateformesNeige",
+                    tileset
+                    );
+
+                // collisions
+                plateformesNeige.setCollisionByProperty({estNeige : true });
+                this.physics.add.collider(player, plateformesNeige, neigePlatsProperties, null, this);
+
+            // PLATEFORMES GLACE __
+                const plateformesGlace = carteDuNiveau.createLayer(
+                    "plateformesGlace",
+                    tileset
+                    );
+
+                // collisions
+                plateformesGlace.setCollisionByProperty({estGlace : true });
+                this.physics.add.collider(player, plateformesGlace, glacePlatsProperties, null, this);
+
+        // OBJECTS
+        
+            // PICK-UP-OBJECTS 
                 
-                let cursors;
-                
-                let health = 4;
-
-
-                let gameOver = false;
-                let commandesLocked = false;
-                let wallJumpLocked = false;
-                
-                let esprits;
-                let textScore;
-                let espritScore = 0;
-
-                let speedMoveX = 150;
-                let speedMoveY = 210;
-                let playerInertie = 0;
-
-                let wallIce = false;
-
-                // FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
-
-                function preload(){
-
-                    // Préchargement de l'UI
-                    this.load.image('lifeFull',"assets/Life_Full.png");
-                    this.load.image('life1',"assets/Life_Hurt_1.png");
-                    this.load.image('life2',"assets/Life_Hurt_2.png");
-                    this.load.image('life3',"assets/Life_Hurt_3.png");
-                    this.load.image('lifeDead',"assets/Life_Dead.png");
-
-                    this.load.image('fond_score', 'assets/fond_chiffre.png');
-
-                    this.load.image('espritUI', "assets/esprit.png");
-                    this.load.image('espritCollectible', 'assets/esprit_in_game.png');
+                //ESPRITS
+                    //récupération
+                    esprits = this.physics.add.staticGroup();
+                    espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
                     
-                    // NIVEAU - Préchargement de la carte
+                    // creation
+                    espritsLayer.forEach(object => {
+                    let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
 
-                        // NIVEAU - chargement tuiles de jeu
-                        this.load.image("Phaser_tuilesdejeu", "assets/tuilesJeu.png");
+                    // collisions
+                    this.physics.add.overlap(player, esprits, collectEsprits, null, this);
 
-                        // NIVEAU - chargement de la carte
-                        this.load.tilemapTiledJSON("carte", "assets/map.json");
-                        this.load.image('background', 'assets/background.png');
-                        this.load.image('secondPlan', 'assets/secondPlan.png'); 
-                        this.load.spritesheet('perso','assets/perso.png',
-                            { frameWidth: 32, frameHeight: 48 });
-                    }
+            // OBSTACLES
+                //CRISTAUX
+                    //récupération
+                    cristaux = this.physics.add.staticGroup();
+                    cristauxLayer = carteDuNiveau.getObjectLayer('cristauxLayer')['objects'];
+                
+                    // creation
+                    cristauxLayer.forEach(object => {
+                        let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                
+                    // collisions
+                    this.physics.add.overlap(player, cristaux, killPlayer, null, this);
 
-                    // Préchargement apparence monstre
-                    this.load.image('monsterRightApparence', 'assets/monstre_right.png');
-                    this.load.image('monsterLeftApparence', 'assets/monstre_left.png');
-
-                    this.load.image('BordureEnnemi', 'assets/perso2.png');
-
-                // FONCTION CREATE - Gère le stade initial du jeu
-
-                function create(){
-
-                    // NIVEAU
-
-                        // NIVEAU - ajout des images de background
-
-                        this.backgroundParallax = this.add.tileSprite(0, 0, 1600, 1600, "background");
-                        this.backgroundParallax.setOrigin(0, 0);
-                        this.backgroundParallax.setScrollFactor(0.5, 1);
-
-                        this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
-                        this.sndPlanParallax.setOrigin(0, 0);
-                        this.sndPlanParallax.setScrollFactor(0.9, 1);
-
-                        /*this.add.image(800, 800, 'background')/*.setScrollFactorX(0.05)*/;
-                        /*this.add.image(800, 800, 'secondPlan')/*.setScrollFactorX(0.3)*/;
-
-                        // NIVEAU - Intégration de la map de TILED
-                            // chargement de la carte
-                            const carteDuNiveau = this.add.tilemap("carte");
-
-                            // chargement du jeu de tuiles
-                            const tileset = carteDuNiveau.addTilesetImage(
-                                    "tuiles_de_jeu",
-                                    "Phaser_tuilesdejeu",
-                                    );
-
-                            // chargement du calque calque_plateformes
-                            const plateformes = carteDuNiveau.createLayer(
-                                    "plateformes",
-                                    tileset
-                                    );
-
-                            // chargement calque neige
-
-                            const plateformesNeige = carteDuNiveau.createLayer(
-                                    "plateformesNeige",
-                                    tileset
-                                    );
-
-                            // chargement calque glace
-
-                            const plateformesGlace = carteDuNiveau.createLayer(
-                                    "plateformesGlace",
-                                    tileset
-                                    );
-
-                            // chargement du calque obstacles
-                            const obstacles = carteDuNiveau.createLayer(
-                                    "obstacles",
-                                    tileset
-                                    );
-
-                            esprits = this.physics.add.staticGroup();
-                            espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
-
-                        // NIVEAU - Plateformes solides
-                        plateformes.setCollisionByProperty({estSolide: true });
-
-                        plateformesNeige.setCollisionByProperty({estNeige : true });
-
-                        plateformesGlace.setCollisionByProperty({estGlace : true });
-
-                        /*neigeRalentit = this.physics.add.group();
-                        calque_ObjetRalentisseur = carteDuNiveau.getObjectLayer('ObjetRalentisseur');
-                        calque_ObjetRalentisseur.objects.forEach( calque_ObjetRalentisseur => {
-                        const PORalentisseur = neigeRalentit.create( calque_ObjetRalentisseur.x + 16, calque_ObjetRalentisseur.y + 15, "TextureRalentisseur").body.setAllowGravity(false).setImmovable(true);*/
-
-                        // NIVEAU - Obstacles mortels
-                        obstacles.setCollisionByProperty({ estMortel : true});
-                        
-                        // NIVEAU - limites du monde avec les dimensions calculées via tiled
-                        this.physics.world.setBounds(0, 0, 1600, 1600);
-
-                    //COLLECTIBLES
-
-                        espritsLayer.forEach(object => {
-                        let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
-                            obj.setScale(object.width/32, object.height/32);
-                            obj.body.width = object.width;
-                            obj.body.height = object.height;
-                        });
-
-                    //Création monstre droite
-                    
+            //MOBS 
+                // MONSTRES VERS DROITE
+                    // récupération
                     monstresRight = this.physics.add.group();
-                    monstresRightLayer = carteDuNiveau.getObjectLayer('monsterRightApparence');
+                    monstresRightLayer = carteDuNiveau.getObjectLayer('monstresRightLayer');
+                    
+                    // creation
                     monstresRightLayer.objects.forEach( monstresRightLayer => {
                         const MmonstresRightLayer = monstresRight.create( monstresRightLayer.x + 16, monstresRightLayer.y + 16, "monsterRightApparence").body.setAllowGravity(false).setBounce(1);
                     });
-                    monstresRight.setVelocity(0, 150);
+                    monstresRight.setVelocity(0, 100);
 
-                    //Création monstre gauche
+                    // collisions
+                    this.physics.add.overlap(player, monstresRight, toucheMob, null, this);
 
+                //MONSTRES VERS GAUCHE
+                    // récupération
                     monstresLeft = this.physics.add.group();
-                    monstresLeftLayer = carteDuNiveau.getObjectLayer('monsterLeftApparence');
+                    monstresLeftLayer = carteDuNiveau.getObjectLayer('monstresLeftLayer');
+                    
+                    // creation
                     monstresLeftLayer.objects.forEach( monstresLeftLayer => {
                         const MMonstresLeftLayer = monstresLeft.create( monstresLeftLayer.x + 16, monstresLeftLayer.y + 16, "monsterLeftApparence").body.setAllowGravity(false).setBounce(1);
                     });
-                    monstresLeft.setVelocity(0, 150);
+                    monstresLeft.setVelocity(0, 100);
 
-                    //Création des Bordures délimitant les déplacements des Ennemis
+                    // collisions
+                    this.physics.add.overlap(player, monstresLeft, toucheMob, null, this);
+
+                //BORDURES MONSTRES (délimitant les déplacements des Ennemis)
+                    // récupération
                     limitesMonstres = this.physics.add.group();
-                    limitesMonstresLayer = carteDuNiveau.getObjectLayer('BordureEnnemi');
+                    limitesMonstresLayer = carteDuNiveau.getObjectLayer('limitesMonstresLayer');
+                    
+                    // création
                     limitesMonstresLayer.objects.forEach( limitesMonstresLayer => {
-                        const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16, "BordureEnnemi").body.setAllowGravity(false).setImmovable(true);
-                    });                
+                        const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+                    });
 
-                    // PLAYER
+                    // collisions
+                    this.physics.add.collider(monstresRight, limitesMonstres);
+                    this.physics.add.collider(monstresLeft, limitesMonstres);
 
-                        // PLAYER - génération du sprite du personnage aux coordonnées, à partir de la sprite sheet (png avec les animations du perso)
-                        player = this.physics.add.sprite(10, 10, 'perso');
+    // LIMITES DU NIVEAU
 
-                        // PLAYER - Collision entre le joueur et les confins du monde
-                        player.setCollideWorldBounds(true);
+        // LIMITES DU NIVEAU VIA DIMENSIONS
+        this.physics.world.setBounds(0, 0, 1600, 1600);
 
-                        // PLAYER - Collision entre le joueur et les plateformes
-                        this.physics.add.collider(player, plateformes, normalPlatsProperties, null, this);
+        // PLAYER - Collision entre le joueur et les limites du niveau
+        player.setCollideWorldBounds(true);
 
-                        this.physics.add.collider(player, plateformesNeige, neigePlatsProperties, null, this);
+    // UI
+        // LIFE
+        lifeUI = this.add.sprite(0,0, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
 
-                        this.physics.add.collider(player, plateformesGlace, glacePlatsProperties, null, this);
-                        
-                        this.physics.add.collider(player, obstacles, killPlayer, null, this);
+        // SCORE ESPRITS
 
-                        this.physics.add.overlap(player, esprits, collectEsprits, null, this);
+            //IMAGE ESPRITS
+            espritUi =this.add.sprite(1100, 40,'espritUI').setOrigin(0,0).setScrollFactor(0);
+            
+            //NOMBRE D'ESPRITS
+            fondScore = this.add.sprite(1108,-6, 'fond_score').setOrigin(0,0).setScrollFactor(0);
+            textScore =this.add.text(1150,50,`${espritScore}`,{fontSize:'32px',fill:'#FFFFFF'}).setOrigin(0,0).setScrollFactor(0);
 
-                        // RECOLTE ESPRITS
+    // ANIMATIONS
+    
+        // PLAYER - MARCHE GAUCHE
+        this.anims.create({
+            key: 'left',
+            frames: this.anims.generateFrameNumbers('perso', {start:0,end:3}),
+            frameRate: 10,
+            repeat: -1
+        });
 
-                    // UI
+        // PLAYER - MARCHE DROITE
+        this.anims.create({
+            key: 'right',
+            frames: this.anims.generateFrameNumbers('perso', {start:5,end:8}),
+            frameRate: 10,
+            repeat: -1
+        });
 
-                        // LIFE
-                        lifeUI = this.add.sprite(0,0, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
+        // PLAYER - IDLE
+        this.anims.create({
+            key: 'turn',
+            frames: [ { key: 'perso', frame: 4 } ],
+            frameRate: 20
+        });
+    
+    // COMMANDES
 
-                        fondScore = this.add.sprite(1108,-6, 'fond_score').setOrigin(0,0).setScrollFactor(0);
+        // CLAVIER
+            // DEPLACEMENTS FLECHES DIRECTIONNELLES
+            cursors = this.input.keyboard.createCursorKeys();
 
-                        //affiche un texte à l’écran, pour les collectibles
-                        textScore =this.add.text(1150,50,`${espritScore}`,{fontSize:'32px',fill:'#FFFFFF'}).setOrigin(0,0).setScrollFactor(0);
+            // DEPLACEMENT HORIZONTAUX - D et Q
+            keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+            keyQ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
 
-                        //affiche l'image du collectible
-                        espritUi =this.add.sprite(1100, 40,'espritUI').setOrigin(0,0).setScrollFactor(0);
+            // SAUT (BARRE D'ESPACE)
+            spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-                        
+            // WALL GRAP (SHIFT)
+            keyWallGrap = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        
+        // MANETTE
+        this.input.gamepad.once('connected', function (pad) {
+            controller = pad;
+        });
 
-                    // ANIMATIONS PLAYER
-                    
-                        // ANIMATIONS PLAYER - animation marche gauche
-                        this.anims.create({
-                            key: 'left',
-                            frames: this.anims.generateFrameNumbers('perso', {start:0,end:3}),
-                            frameRate: 10,
-                            repeat: -1
-                        });
+    // CAMERA
 
-                        // ANIMATIONS PLAYER - face à la caméra
-                        this.anims.create({
-                            key: 'turn',
-                            frames: [ { key: 'perso', frame: 4 } ],
-                            frameRate: 20
-                        });
+        // LIMITES CAMERA (champs de la caméra de taille identique à celle du niveau)
+        this.cameras.main.setBounds(0, 0, 1600, 1600);
+        
+        // TAILLE
+        this.cameras.main.setSize(1200, 750);
 
-                        // ANIMATIONS PLAYER - Marche droite
-                        this.anims.create({
-                            key: 'right',
-                            frames: this.anims.generateFrameNumbers('perso', {start:5,end:8}),
-                            frameRate: 10,
-                            repeat: -1
-                        });           
-                    
-                    // COMMANDES
+        // ANCRAGE CAMERA - JOUEUR
+        this.cameras.main.startFollow(player);        
 
-                        // COMMANDES - DEPLACEMENTS HORIZONTAUX
-                        cursors = this.input.keyboard.createCursorKeys();
+        // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
+        /*this.cameras.main.setZoom(1, 1)*/     
 
-                        // COMMANDES - SAUT (BARRE D'ESPACE)
-                        spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    // ----------------------------------------------------- FIN FONCTION CREATE ----------------------------------------------
 
-                        keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-                        keyQ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
-
-                        keyWallGrap = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-                                        
-                    // CAMERA
-
-                        // CAMERA - limite du champs de la caméra de taille identique à celle du monde
-                        this.cameras.main.setBounds(0, 0, 1600, 1600);
-                        
-                        // CAMERA - taille de la caméra
-                        this.cameras.main.setSize(1200, 750);
-
-                        // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
-                        /*this.cameras.main.setZoom(1, 1)*/
-
-                        // CAMERA - ancrage de la caméra sur le joueur (elle suit le joueur)
-                        this.cameras.main.startFollow(player); 
-
-                }
-
-// Déverouillage des commandes
-function lockCommandes(){
-    commandesLocked = false;
 }
 
-// Déverouillage du wall Jump
-function lockWallJump(){
+        /*if (player.body.touching.down) {
+            /*console.log("kill ennemy");
+            bat.disableBody(true, true);
+            player.setVelocityY(-pDeplacementY);
+        }
+        else if (player.body.touching.right) {
+            console.log("paf droite");
+            player.setVelocityX(-50);
+            commandesLocked = true;
+            setTimeout(unlockCommandes, 200);
+
+            contactMob = true;
+            setTimeout(finInvicible, 500); 
+            
+            health -= 1;
+            pinvisible();
+        }
+        else if (player.body.touching.left) {
+            console.log("paf gauche");
+            player.setVelocityX(50);
+            commandesLocked = true;
+            setTimeout(unlockCommandes, 200);
+
+            contactMob = true;
+            setTimeout(finInvicible, 500); 
+            
+            health -= 1;
+            pinvisible();
+        }
+        else {
+            console.log("paf mid");
+            /*player.setVelocityX(50);
+            commandesLocked = true;
+            setTimeout(unlockCommandes, 200);
+
+
+            contactMob = true;
+            setTimeout(finInvicible, 500); 
+
+            health -= 1;
+            pinvisible();*/
+
+//FONCTION UPDATE - s'exécute à chaque frame du jeu
+function update(){
+    movementPlayer();
+    respawn();
+}
+
+// --------------------------------- FONCTIONS ---------------------------------
+
+// CARACTERISTIQUES DES PLATEFORMES
+
+    //PLATEFORMES NORMALES (grotte et donjon)
+    function normalPlatsProperties() {
+        speedMoveX = 150;
+        speedMoveY = 210;
+        playerInertie = 0;
+        wallIce = false;
+
+        console.log("check wallIce + ", wallIce);
+    }
+
+    // PLATEFORMES NEIGE (ralentissement)
+    function neigePlatsProperties() {
+        speedMoveX = 100;
+        speedMoveY = 210;
+        playerInertie = 0;
+        wallIce = false;
+
+        console.log("check wallIce + ", wallIce);
+    }
+
+    // PLATEFORMES GLACE (inertie et wallgrab glissant)
+    function glacePlatsProperties() {
+        speedMoveX = 150;
+        speedMoveY = 210;
+        playerInertie = 3000;
+        wallIce = true;
+
+        console.log("check wallIce + ", wallIce);
+    }
+
+// CAPACITES DU JOUEUR AU SOL
+function onFloorProperties(){
     
-    if(player.body.onFloor()){
-        wallJumpLocked = true;
+    if(player.body.onFloor()){ // si le joueur est au sol
+        wallJumpLocked = true; //on ne peut pas walljump à partir du sol
+        unlockCommandes(); // on débloque les commandes
         
-        if(wallIce == false){
+        if(wallIce == false){ // si pas de glace
         // Coupe l'inertie du saut
         player.setAccelerationX(playerInertie);
         }
     }
+    
     else{
-        wallJumpLocked = false;
+        wallJumpLocked = false; // si le joueur est pas au sol : wall jump débloqué
     }
 }
 
-//Gestion du ralentissement sur les ralentisseurs
-function normalPlatsProperties() {
-    speedMoveX = 150;
-    speedMoveY = 210;
-    playerInertie = 0;
-    wallIce = false;
-
-    console.log("check wallIce + ", wallIce);
-}
-
-neigeRalentissement
-
-function neigePlatsProperties() {
-    speedMoveX = 100;
-    speedMoveY = 210;
-    playerInertie = 0;
-    wallIce = false;
-
-    console.log("check wallIce + ", wallIce);
-}
-
-function glacePlatsProperties() {
-    speedMoveX = 150;
-    speedMoveY = 210;
-    playerInertie = 3000;
-    wallIce = true;
-
-    console.log("check wallIce + ", wallIce);
+// Déverouillage des commandes
+function unlockCommandes(){
+    commandesLocked = false;
 }
 
 // DEPLACEMENT PLAYER
-
 function movementPlayer(){
 
-        // Verification continue que le joueur est au sol ou à l'air pour sauter 
-        lockWallJump();
+    // Verification continue que le joueur est au sol ou à l'air. Débloquage de capacité en conséquent
+    onFloorProperties();
 
-        // DEPLACEMENT PLAYER - GAUCHE
-        if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
-            player.setVelocityX(-speedMoveX); //alors vitesse positive en X
-            /*player.setVelocityX(-150); //alors vitesse négative en X*/
-            if(player.body.onFloor()){
-                player.anims.play('left', true); //et animation => gauche
-                player.setAccelerationX(-playerInertie);
-            }
-        }
+    // DEPLACEMENT - GAUCHE
+    if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
+        player.setVelocityX(-speedMoveX); //alors vitesse négative en X
         
-        // DEPLACEMENT PLAYER - DROITE
-        else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
-            player.setVelocityX(speedMoveX); //alors vitesse positive en X
+        if(player.body.onFloor()){ // si joueur au sol
+            player.anims.play('left', true); //animation marche gauche
+            player.setAccelerationX(-playerInertie);
+        }
+    }
 
-            if(player.body.onFloor()){
-                player.anims.play('right', true); //et animation => gauche
-                player.setAccelerationX(playerInertie);
-            }
-        }
-        
-        // DEPLACEMENT - IDLE
-        else { 
-            player.setVelocityX(0); //vitesse nulle
-            player.anims.play('turn'); //animation fait face caméra
-        }
-        
-        // DEPLACEMENT - SAUT
-        if (cursors.up.isDown || spaceBar.isDown){
+    // DEPLACEMENT - DROITE
+    else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
+        player.setVelocityX(speedMoveX); //alors vitesse positive en X
 
-            // SAUT A TERRE
-            if(player.body.onFloor()){
+        if(player.body.onFloor()){ // si joueur au sol
+            player.anims.play('right', true); //animation marche droite
+            player.setAccelerationX(playerInertie);
+        }
+    }
+
+    // IDLE
+    else { 
+        player.setVelocityX(0); //vitesse nulle
+        player.anims.play('turn'); //animation idle
+    }
+
+    // DEPLACEMENT - SAUT
+    if ((cursors.up.isDown || spaceBar.isDown) && commandesLocked == false){
+
+        // SAUT A TERRE
+        if(player.body.onFloor()){
+            
             //si touche haut appuyée ET que le perso touche le sol
             player.setAccelerationY(10);
             player.setMaxVelocity(speedMoveY);
             player.setVelocityY(-speedMoveY); //alors vitesse verticale négative
             //(on saute)
-            }
         }
+    }
 
-        // SAUT MUR GAUCHE
+    // WALL JUMP
+
+        // WALL JUMP GAUCHE
         if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
-
-            if(wallIce == true){
+            if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
                 player.setVelocityX(0);
             }
-            else if(wallIce == false){
+            else if(wallIce == false){ // si normal : on reste collé contre le mur
                 player.setVelocityY(-5);
                 player.setVelocityX(-2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown){
+            if (cursors.up.isDown || spaceBar.isDown){ // on se repousse du mur
                 player.setAccelerationX(4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
@@ -408,54 +496,146 @@ function movementPlayer(){
                 console.log(commandesLocked)
                 
                 // commandes débloquées
-                setTimeout(lockCommandes, 1000);
+                setTimeout(unlockCommandes, 2000);
             }
         }
 
-        // SAUT MUR DROIT
+        // WALL JUMP DROIT
         if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
 
-            if(wallIce == true){
+            if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
                 player.setVelocityX(0);
             }
-            else if(wallIce == false){
+            else if(wallIce == false){ // si normal : on reste collé contre le mur
                 player.setVelocityY(-5);
                 player.setVelocityX(2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown){
+            if (cursors.up.isDown || spaceBar.isDown){ // on se repousse du mur
                 player.setAccelerationX(-4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
 
                 // commandes bloquées
                 commandesLocked = true;
-                console.log(commandesLocked)
+                console.log(commandesLocked);
 
                 // commandes débloquées
-                setTimeout(lockCommandes, 1000);
+                setTimeout(unlockCommandes, 1000);
             }
         }
+}
+
+// COLLECTE ESPRIT
+function collectEsprits(player, esprit){
+    esprit.destroy(esprit.x, esprit.y);
+    espritScore ++; // increment le score
+    textScore.setText(`${espritScore}`); // montre le score actuel
+    console.log(espritScore);
+}
+
+// Fonctions alexandre
+
+// Gestion des frames d'invulnérabilité
+function getContactMob() {
+    if ( contactMob == false ) {
+        return true
+    }
+    else {
+        return false
+    }
+}
+
+// CONTACT AVEC UN MOB
+function toucheMob() {
+    if(player.body.touching.right || player.body.touching.left || player.body.touching.up || player.body.touching.down){
+        if(invincibleOn == false){
+            console.log("contact ennemi");
+
+            health -= 1;
+            gestionLife();
+
+            console.log(health);
+            invincible();
+            setTimeout(finInvicible, 700); 
+        }
+    }
+}
+
+function gestionLife(){
+    if (health == 4){
+        lifeUI.setTexture('lifeFull');
+    }
+    if (health == 3){
+        lifeUI.setTexture('life1');
+    }
+    if (health == 2){
+        lifeUI.setTexture('life2');
+    }
+    if (health == 1){
+        lifeUI.setTexture('life3');
+    }
+    if (health == 0){
+        lifeUI.setTexture('lifeDead');
+        killPlayer();
+    }
+}
+
+// INVINCIBILITE SI TOUCHE MONSTRE
+
+    // REND INVINCIBLE
+    function invincible() {
+        invincibleOn = true;
+        console.log("invincible");
+
+        // animation invincible
+        playerInvisible();
     }
 
+    // FIN INVINCIBLE
+    function finInvicible() {
+        invincibleOn = false;
+        console.log("Peut se faire touché");
+    }
+
+    // ANIMATION - FRAME D'INVINCIBILITE
+
+        // ANIMATION - FRAME D'INVINCIBILITE (PART 1 - INVISIBLE)
+        function playerInvisible() {
+            player.visible = false;
+            setTimeout(playerVisible, 100);
+        }
+
+        // ANIMATION - FRAME D'INVINCIBILITE (PART 2 - VISIBLE)
+        function playerVisible() {
+            if (frameInvincible < 3) {
+                console.log("visible");
+                player.visible = true;
+                setTimeout(playerInvisible, 100);   
+                frameInvincible += 1;
+            }
+            else {
+                player.visible = true;
+                frameInvincible = 0;
+            }
+        }
+
+// MORT DU JOUEUR
 function killPlayer(){
     gameOver = true;
     console.log("Check death 1");
 }
 
-function collectEsprits(player, esprit){
-    esprit.destroy(esprit.x, esprit.y);
-    espritScore ++; // increment the score
-    textScore.setText(`${espritScore}`); // set the text to show the current score
-    return false;
-}
-
-
+// RESTART LE JEU
 function respawn(){
     if (gameOver == true){
+        
+        player.setTint(0xff0000);
+        player.anims.play('turn');
 
-        lifeUI.setTexture('lifeDead');
+        gameOver = false;
+        commandesLocked = true;
 
         console.log("Check death 2");
 
@@ -463,31 +643,47 @@ function respawn(){
         
         /*setTimeout(player.body.reset(1352, 680), 8000);*/
 
-        setTimeout(function() {player.body.reset(1352, 680);
-        gameOver = false;
-        lifeUI.setTexture('lifeFull');
-        
-        }, 8000);
+        setTimeout(function() {
+            player.body.reset(1352, 680);    
+            player.setTint(000000);
+            
+            health = 4;
+            frameInvincible = 0;
 
+            commandesLocked = false;
+            wallJumpLocked = false;
+
+            espritScore = 0;
+
+            espritsLayer.forEach(object => {
+                let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+            });
+
+            cristauxLayer.forEach(object => {
+                let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
+                obj.setScale(object.width/32, object.height/32);
+                obj.body.width = object.width;
+                obj.body.height = object.height;
+            });
+
+            monstresRightLayer.objects.forEach( monstresRightLayer => {
+                const MmonstresRightLayer = monstresRight.create( monstresRightLayer.x + 16, monstresRightLayer.y + 16, "monsterRightApparence").body.setAllowGravity(false).setBounce(1);
+            });
+
+            monstresLeftLayer.objects.forEach( monstresLeftLayer => {
+                const MMonstresLeftLayer = monstresLeft.create( monstresLeftLayer.x + 16, monstresLeftLayer.y + 16, "monsterLeftApparence").body.setAllowGravity(false).setBounce(1);
+            });
+
+            limitesMonstresLayer.objects.forEach( limitesMonstresLayer => {
+                const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+            });
+        }, 1000);
 
     }
-}
-                //FONCTION UPDATE - à exécuter à chaque frame du jeu
-                function update(){
-
-                    /*this.background.tilePosition.x -= 0.05;*/
-                    /*this.secondPlan.tilePosition.x -= 0.3;*/
-
-
-                    
-
-                    movementPlayer();
-                    respawn();
-
-                      
-
-                    /*if (gameOver){return;}*/
-                }
+}   
         </script>
     </body>
 </html>
