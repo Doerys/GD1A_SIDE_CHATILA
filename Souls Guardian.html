@@ -4,7 +4,6 @@
         <meta charset="UTF-8" /><title>Souls Guardian</title>
 
         <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
-        <link href="styles.css" media="all" rel="stylesheet" type="text/css" />
 
         <style type="text/css"> body { margin: 0; }</style>>
     </head>
@@ -43,6 +42,10 @@ let frameInvincible = 0;
 let invincibleOn = false;
 
 let gameOver = false;
+
+let jumpMax = 1;
+let jumpLeft = jumpMax;
+let coolDownJump = false;
 let commandesLocked = false;
 let wallJumpLocked = false;
 
@@ -55,6 +58,8 @@ let speedMoveY = 210;
 let playerInertie = 0;
 
 let wallIce = false;
+
+var controller = false; //manette
 
 // FONCTION PRELOAD - précharger en mémoire les éléments de notre jeu (assets)
 function preload(){
@@ -86,17 +91,17 @@ function preload(){
     // OBSTACLES
         this.load.image('cristauxImage', 'assets/cristaux.png');
 
-        this.load.image('picsBas', 'assets/picsBas.png');
-        this.load.image('picsHaut', 'assets/picsHaut.png');
-        this.load.image('picsDroite', 'assets/picsDroite.png');
-        this.load.image('picsGauche', 'assets/picsGauche.png');
+        this.load.image('picsBasImage', 'assets/picsBas.png');
+        this.load.image('picsHautImage', 'assets/picsHaut.png');
+        this.load.image('picsDroiteImage', 'assets/picsDroite.png');
+        this.load.image('picsGaucheImage', 'assets/picsGauche.png');
 
-        this.load.image('lave', 'assets/lava.png');
+        this.load.image('laveImage', 'assets/lava.png');
         
-        this.load.image('picsGlaceBas', 'assets/picsGlaceBas.png');        
-        this.load.image('picsGlaceHaut', 'assets/picsGlaceHaut.png');
-        this.load.image('picsGlaceDroite', 'assets/picsGlaceDroite.png');
-        this.load.image('picsGlaceGauche', 'assets/picsGlaceGauche.png');
+        this.load.image('picsGlaceBasImage', 'assets/picsGlaceBas.png');        
+        this.load.image('picsGlaceHautImage', 'assets/picsGlaceHaut.png');
+        this.load.image('picsGlaceDroiteImage', 'assets/picsGlaceDroite.png');
+        this.load.image('picsGlaceGaucheImage', 'assets/picsGlaceGauche.png');
 
     // MOBS
         // Préchargement apparence monstre
@@ -105,6 +110,7 @@ function preload(){
 
     // PICK UPS OBJECTS
     this.load.image('espritCollectible', 'assets/esprit_in_game.png');
+    this.load.image("powerUpImage", 'assets/powerUp.png');
 
     // ----------------------------------------------------- FIN FONCTION PRELOAD ----------------------------------------------
 
@@ -126,23 +132,17 @@ function create(){
         this.sndPlanParallax.setScrollFactor(0.9, 1);
 
     // PLAYER
-        player = this.physics.add.sprite(1352, 680, 'perso');
+        player = this.physics.add.sprite(50, 1400, 'perso');
 
     // MAP DE TILED
         // TILEMAP    
             const carteDuNiveau = this.add.tilemap("carte");
 
         // TILESET
-            const tileset = carteDuNiveau.addTilesetImage(
-                "tuiles_de_jeu",
-                "Phaser_tuilesdejeu",
-                );
+            const tileset = carteDuNiveau.addTilesetImage("tuiles_de_jeu","Phaser_tuilesdejeu",);
 
             // PLATEFORMES NORMALES []
-                const plateformes = carteDuNiveau.createLayer(
-                    "plateformes",
-                    tileset
-                    );
+                const plateformes = carteDuNiveau.createLayer("plateformes",tileset);
 
                 // collisions
                 plateformes.setCollisionByProperty({estSolide: true });
@@ -150,20 +150,14 @@ function create(){
 
 
             // PLATEFORMES NEIGE **
-                const plateformesNeige = carteDuNiveau.createLayer(
-                    "plateformesNeige",
-                    tileset
-                    );
+                const plateformesNeige = carteDuNiveau.createLayer("plateformesNeige",tileset);
 
                 // collisions
                 plateformesNeige.setCollisionByProperty({estNeige : true });
                 this.physics.add.collider(player, plateformesNeige, neigePlatsProperties, null, this);
 
             // PLATEFORMES GLACE __
-                const plateformesGlace = carteDuNiveau.createLayer(
-                    "plateformesGlace",
-                    tileset
-                    );
+                const plateformesGlace = carteDuNiveau.createLayer("plateformesGlace",tileset);
 
                 // collisions
                 plateformesGlace.setCollisionByProperty({estGlace : true });
@@ -188,6 +182,22 @@ function create(){
 
                     // collisions
                     this.physics.add.overlap(player, esprits, collectEsprits, null, this);
+
+                // POWER UP - DOUBLE JUMP
+
+                powerUp = this.physics.add.staticGroup();
+                powerUpLayer = carteDuNiveau.getObjectLayer('powerUpLayer')['objects'];
+                
+                // creation
+                powerUpLayer.forEach(object => {
+                let obj = powerUp.create(object.x + 16, object.y -16, 'powerUpImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.overlap(player, powerUp, unlockDoubleJump, null, this);
 
             // OBSTACLES
                 //CRISTAUX
@@ -333,7 +343,7 @@ function create(){
                     
                     // creation
                     picsGlaceGaucheLayer.forEach(object => {
-                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');
+                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');monstresRight
                         obj.setScale(object.width/32, object.height/32);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
@@ -355,7 +365,7 @@ function create(){
                     monstresRight.setVelocity(0, 100);
 
                     // collisions
-                    this.physics.add.overlap(player, monstresRight, toucheMob, null, this);
+                    this.physics.add.overlap(player, monstresRight, toucheMobDroite, null, this);
 
                 //MONSTRES VERS GAUCHE
                     // récupération
@@ -369,21 +379,33 @@ function create(){
                     monstresLeft.setVelocity(0, 100);
 
                     // collisions
-                    this.physics.add.overlap(player, monstresLeft, toucheMob, null, this);
+                    this.physics.add.overlap(player, monstresLeft, toucheMobGauche, null, this);
 
-                //BORDURES MONSTRES (délimitant les déplacements des Ennemis)
+                //BORDURES MONSTRES RIGHT (délimitant les déplacements des Ennemis de droite)
                     // récupération
-                    limitesMonstres = this.physics.add.group();
-                    limitesMonstresLayer = carteDuNiveau.getObjectLayer('limitesMonstresLayer');
+                    limitesMonstresRight = this.physics.add.group();
+                    limitesMonstresRightLayer = carteDuNiveau.getObjectLayer('limitesMonstresRightLayer');
                     
                     // création
-                    limitesMonstresLayer.objects.forEach( limitesMonstresLayer => {
-                        const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+                    limitesMonstresRightLayer.objects.forEach( limitesMonstresRightLayer => {
+                        const LimitesMonstresRightLayer = limitesMonstresRight.create( limitesMonstresRightLayer.x + 16, limitesMonstresRightLayer.y +16).body.setAllowGravity(false).setImmovable(true);
                     });
 
                     // collisions
-                    this.physics.add.collider(monstresRight, limitesMonstres);
-                    this.physics.add.collider(monstresLeft, limitesMonstres);
+                    this.physics.add.collider(monstresLeft, limitesMonstresRight);
+
+                //BORDURES MONSTRES LEFT (délimitant les déplacements des Ennemis de gauche)
+                    // récupération
+                    limitesMonstresLeft = this.physics.add.group();
+                    limitesMonstresLeftLayer = carteDuNiveau.getObjectLayer('limitesMonstresLeftLayer');
+                    
+                    // création
+                    limitesMonstresLeftLayer.objects.forEach( limitesMonstresLeftLayer => {
+                        const LimitesMonstresLeftLayer = limitesMonstresLeft.create( limitesMonstresLeftLayer.x + 16, limitesMonstresLeftLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+                    });
+
+                    // collisions
+                    this.physics.add.collider(monstresLeft, limitesMonstresLeft);
 
     // LIMITES DU NIVEAU
 
@@ -464,58 +486,14 @@ function create(){
         this.cameras.main.startFollow(player);        
 
         // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
-        /*this.cameras.main.setZoom(1, 1)*/     
+        /*this.cameras.main.setZoom(3, 3);*/
 
     // ----------------------------------------------------- FIN FONCTION CREATE ----------------------------------------------
-
 }
-
-        /*if (player.body.touching.down) {
-            /*console.log("kill ennemy");
-            bat.disableBody(true, true);
-            player.setVelocityY(-pDeplacementY);
-        }
-        else if (player.body.touching.right) {
-            console.log("paf droite");
-            player.setVelocityX(-50);
-            commandesLocked = true;
-            setTimeout(unlockCommandes, 200);
-
-            contactMob = true;
-            setTimeout(finInvicible, 500); 
-            
-            health -= 1;
-            pinvisible();
-        }
-        else if (player.body.touching.left) {
-            console.log("paf gauche");
-            player.setVelocityX(50);
-            commandesLocked = true;
-            setTimeout(unlockCommandes, 200);
-
-            contactMob = true;
-            setTimeout(finInvicible, 500); 
-            
-            health -= 1;
-            pinvisible();
-        }
-        else {
-            console.log("paf mid");
-            /*player.setVelocityX(50);
-            commandesLocked = true;
-            setTimeout(unlockCommandes, 200);
-
-
-            contactMob = true;
-            setTimeout(finInvicible, 500); 
-
-            health -= 1;
-            pinvisible();*/
 
 //FONCTION UPDATE - s'exécute à chaque frame du jeu
 function update(){
     movementPlayer();
-    respawn();
 }
 
 // --------------------------------- FONCTIONS ---------------------------------
@@ -558,6 +536,7 @@ function onFloorProperties(){
     if(player.body.onFloor()){ // si le joueur est au sol
         wallJumpLocked = true; //on ne peut pas walljump à partir du sol
         unlockCommandes(); // on débloque les commandes
+        jumpLeft = jumpMax;
         
         if(wallIce == false){ // si pas de glace
         // Coupe l'inertie du saut
@@ -582,7 +561,7 @@ function movementPlayer(){
     onFloorProperties();
 
     // DEPLACEMENT - GAUCHE
-    if ((cursors.left.isDown || keyQ.isDown) && commandesLocked == false){ //si la touche gauche est appuyée
+    if ((cursors.left.isDown || keyQ.isDown || controller.left) && commandesLocked == false){ //si la touche gauche est appuyée
         player.setVelocityX(-speedMoveX); //alors vitesse négative en X
         
         if(player.body.onFloor()){ // si joueur au sol
@@ -592,7 +571,7 @@ function movementPlayer(){
     }
 
     // DEPLACEMENT - DROITE
-    else if ((cursors.right.isDown || keyD.isDown) && commandesLocked == false){ //sinon si la touche droite est appuyée
+    else if ((cursors.right.isDown || keyD.isDown || controller.right) && commandesLocked == false){ //sinon si la touche droite est appuyée
         player.setVelocityX(speedMoveX); //alors vitesse positive en X
 
         if(player.body.onFloor()){ // si joueur au sol
@@ -608,23 +587,33 @@ function movementPlayer(){
     }
 
     // DEPLACEMENT - SAUT
-    if ((cursors.up.isDown || spaceBar.isDown) && commandesLocked == false){
+    if ((cursors.up.isDown || spaceBar.isDown || controller.up || controller.A) && commandesLocked == false && (jumpLeft >= 1) && (coolDownJump == false)){
 
         // SAUT A TERRE
-        if(player.body.onFloor()){
+        /*if(player.body.onFloor()){*/
             
+            jumpLeft -= 1;
+            coolDownJump = true;
+
+            setTimeout(function() {
+                coolDownJump = false;
+                console.log("REJUMP !");            
+            }, 500);
+
             //si touche haut appuyée ET que le perso touche le sol
             player.setAccelerationY(10);
             player.setMaxVelocity(speedMoveY);
             player.setVelocityY(-speedMoveY); //alors vitesse verticale négative
             //(on saute)
-        }
     }
 
     // WALL JUMP
 
         // WALL JUMP GAUCHE
-        if(player.body.blocked.left && keyWallGrap.isDown && wallJumpLocked == false){
+        if(player.body.blocked.left && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
+
+            jumpLeft = jumpMax;
+
             if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
                 player.setVelocityX(0);
@@ -634,7 +623,7 @@ function movementPlayer(){
                 player.setVelocityX(-2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown){ // on se repousse du mur
+            if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
                 player.setAccelerationX(4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
@@ -649,7 +638,9 @@ function movementPlayer(){
         }
 
         // WALL JUMP DROIT
-        if(player.body.blocked.right && keyWallGrap.isDown && wallJumpLocked == false){
+        if(player.body.blocked.right && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
+
+            jumpLeft = jumpMax;
 
             if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
@@ -660,7 +651,7 @@ function movementPlayer(){
                 player.setVelocityX(2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown){ // on se repousse du mur
+            if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
                 player.setAccelerationX(-4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
@@ -683,7 +674,10 @@ function collectEsprits(player, esprit){
     console.log(espritScore);
 }
 
-// Fonctions alexandre
+function unlockDoubleJump(player, powerUp){
+    jumpMax += 1;
+    powerUp.destroy(powerUp.x, powerUp.y);
+}
 
 // Gestion des frames d'invulnérabilité
 function getContactMob() {
@@ -695,9 +689,8 @@ function getContactMob() {
     }
 }
 
-// CONTACT AVEC UN MOB
-function toucheMob() {
-    if(player.body.touching.right || player.body.touching.left || player.body.touching.up || player.body.touching.down){
+function toucheMobGauche(player, monstresLeft) {
+    if(player.body.touching.right || player.body.touching.left || player.body.touching.up){
         if(invincibleOn == false){
             console.log("contact ennemi");
 
@@ -709,8 +702,33 @@ function toucheMob() {
             setTimeout(finInvicible, 700); 
         }
     }
+    else if (player.body.touching.down){
+        monstresLeft.disableBody(true, true);
+        player.setVelocityY(-210);
+    }
 }
 
+// CONTACT AVEC UN MOB
+function toucheMobDroite(player, monstresRight) {
+    if(player.body.touching.right || player.body.touching.left || player.body.touching.up){
+        if(invincibleOn == false){
+            console.log("contact ennemi");
+
+            health -= 1;
+            gestionLife();
+
+            console.log(health);
+            invincible();
+            setTimeout(finInvicible, 700); 
+        }
+    }
+    else if (player.body.touching.down){
+        monstresRight.disableBody(true, true);
+        player.setVelocityY(-210);
+    }
+}
+
+// Change l'interface et déclenche la mort si 0 PV
 function gestionLife(){
     if (health == 4){
         lifeUI.setTexture('lifeFull');
@@ -772,11 +790,15 @@ function gestionLife(){
 // MORT DU JOUEUR
 function killPlayer(){
     gameOver = true;
+    player.setTint(0xff0000);
+    player.anims.play('turn');
+    this.physics.pause();
+    lifeUI.setTexture('lifeDead');
     console.log("Check death 1");
 }
 
 // RESTART LE JEU
-function respawn(){
+/*function respawn(){
     if (gameOver == true){
         
         player.setTint(0xff0000);
@@ -789,7 +811,7 @@ function respawn(){
 
         //replace le joueur à la zone de départ
         
-        /*setTimeout(player.body.reset(1352, 680), 8000);*/
+        /*setTimeout(player.body.reset(1352, 680), 8000);
 
         setTimeout(function() {
             player.body.reset(1352, 680);    
@@ -802,36 +824,10 @@ function respawn(){
             wallJumpLocked = false;
 
             espritScore = 0;
-
-            espritsLayer.forEach(object => {
-                let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
-                    obj.setScale(object.width/32, object.height/32);
-                    obj.body.width = object.width;
-                    obj.body.height = object.height;
-            });
-
-            cristauxLayer.forEach(object => {
-                let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
-                obj.setScale(object.width/32, object.height/32);
-                obj.body.width = object.width;
-                obj.body.height = object.height;
-            });
-
-            monstresRightLayer.objects.forEach( monstresRightLayer => {
-                const MmonstresRightLayer = monstresRight.create( monstresRightLayer.x + 16, monstresRightLayer.y + 16, "monsterRightApparence").body.setAllowGravity(false).setBounce(1);
-            });
-
-            monstresLeftLayer.objects.forEach( monstresLeftLayer => {
-                const MMonstresLeftLayer = monstresLeft.create( monstresLeftLayer.x + 16, monstresLeftLayer.y + 16, "monsterLeftApparence").body.setAllowGravity(false).setBounce(1);
-            });
-
-            limitesMonstresLayer.objects.forEach( limitesMonstresLayer => {
-                const LimitesMonstresLayer = limitesMonstres.create( limitesMonstresLayer.x + 16, limitesMonstresLayer.y +16).body.setAllowGravity(false).setImmovable(true);
-            });
         }, 1000);
 
     }
-}   
+}*/   
         </script>
     </body>
 </html>
