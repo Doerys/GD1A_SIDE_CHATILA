@@ -20,7 +20,8 @@
                 physics: {
                     default: 'arcade',
                     arcade: {
-                    gravity: { y: 300 },
+                    gravity: { y: 600 },
+                    fps: 50,
                     debug: true
                     }},
 
@@ -43,9 +44,6 @@ let invincibleOn = false;
 
 let gameOver = false;
 
-let jumpMax = 1;
-let jumpLeft = jumpMax;
-let coolDownJump = false;
 let commandesLocked = false;
 let wallJumpLocked = false;
 
@@ -53,11 +51,14 @@ let esprits;
 let textScore;
 let espritScore = 0;
 
-let speedMoveX = 150;
-let speedMoveY = 210;
-let playerInertie = 0;
+let porteVertDisable = false;
+let porteRoseDisable = false;
 
 let wallIce = false;
+
+let doubleJumpAbility = false;
+let didPressJump = false;
+let canDoubleJump = false;
 
 var controller = false; //manette
 
@@ -108,6 +109,16 @@ function preload(){
             this.load.image('monsterRightApparence', 'assets/monstre_right.png');
             this.load.image('monsterLeftApparence', 'assets/monstre_left.png');
 
+    // ELEMENTS INTERACTIFS
+
+        // BOUTON ET PORTE ROSE
+        this.load.image('boutonRoseImage', 'assets/boutonRose.png');        
+        this.load.image('porteRoseImage', 'assets/porteRose.png');
+
+        // BOUTON ET PORTE VERTE
+        this.load.image('boutonVertImage', 'assets/boutonVert.png');        
+        this.load.image('porteVertImage', 'assets/porteVerte.png');
+    
     // PICK UPS OBJECTS
     this.load.image('espritCollectible', 'assets/esprit_in_game.png');
     this.load.image("powerUpImage", 'assets/powerUp.png');
@@ -124,15 +135,16 @@ function create(){
         // ARRIERE PLAN - BACKGROUND
         this.backgroundParallax = this.add.tileSprite(0, 0, 1600, 1600, "background");
         this.backgroundParallax.setOrigin(0, 0);
-        this.backgroundParallax.setScrollFactor(0.5, 1);
+        this.backgroundParallax.setScrollFactor(0.7, 1);
 
         // ARRIERE PLAN - SECOND PLAN
         this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
         this.sndPlanParallax.setOrigin(0, 0);
-        this.sndPlanParallax.setScrollFactor(0.9, 1);
+        this.sndPlanParallax.setScrollFactor(0.5, 1);
 
     // PLAYER
-        player = this.physics.add.sprite(50, 1400, 'perso');
+        //player = this.physics.add.sprite(1350, 650, 'perso');
+        player = this.physics.add.sprite(50, 1300, 'perso');
 
     // MAP DE TILED
         // TILEMAP    
@@ -149,7 +161,7 @@ function create(){
                 this.physics.add.collider(player, plateformes, normalPlatsProperties, null, this);
 
 
-            // PLATEFORMES NEIGE **
+            // PLATEFORMES NEIGE
                 const plateformesNeige = carteDuNiveau.createLayer("plateformesNeige",tileset);
 
                 // collisions
@@ -164,6 +176,76 @@ function create(){
                 this.physics.add.collider(player, plateformesGlace, glacePlatsProperties, null, this);
 
         // OBJECTS
+
+            // ELEMENTS INTERACTIFS
+
+                // BOUTON ROSE
+
+                    //récupération
+                    boutonRose = this.physics.add.staticGroup();
+                    boutonRoseLayer = carteDuNiveau.getObjectLayer('boutonRoseLayer')['objects'];
+                    
+                    // creation
+                    boutonRoseLayer.forEach(object => {
+                    let obj = boutonRose.create(object.x + 16, object.y -16, 'boutonRoseImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(player, boutonRose, pressBoutonRose, null, this);
+
+                // PORTE ROSE
+
+                    //récupération
+                    porteRose = this.physics.add.staticGroup();
+                    porteRoseLayer = carteDuNiveau.getObjectLayer('porteRoseLayer')['objects'];
+                    
+                    // creation
+                    porteRoseLayer.forEach(object => {
+                    let obj = porteRose.create(object.x + 16, object.y -16, 'porteRoseImage');
+                        obj.setScale(object.width/32, object.height/64);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.collider(player, porteRose, disablePorteRose, null, this);
+
+                // BOUTON VERT
+
+                    //récupération
+                    boutonVert = this.physics.add.staticGroup();
+                    boutonVertLayer = carteDuNiveau.getObjectLayer('boutonVertLayer')['objects'];
+                    
+                    // creation
+                    boutonVertLayer.forEach(object => {
+                    let obj = boutonVert.create(object.x + 16, object.y -16, 'boutonVertImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(player, boutonVert, pressBoutonVert, null, this);
+
+                // PORTE VERTE
+
+                    //récupération
+                    porteVert = this.physics.add.staticGroup();
+                    porteVertLayer = carteDuNiveau.getObjectLayer('porteVerteLayer')['objects'];
+                    
+                    // creation
+                    porteVertLayer.forEach(object => {
+                    let obj = porteVert.create(object.x + 16, object.y +32, 'porteVertImage');
+                        obj.setScale(object.width/32, object.height/64);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.collider(player, porteVert, disablePorteVert, null, this);
         
             // PICK-UP-OBJECTS 
                 
@@ -392,7 +474,7 @@ function create(){
                     });
 
                     // collisions
-                    this.physics.add.collider(monstresLeft, limitesMonstresRight);
+                    this.physics.add.collider(monstresRight, limitesMonstresRight);
 
                 //BORDURES MONSTRES LEFT (délimitant les déplacements des Ennemis de gauche)
                     // récupération
@@ -463,6 +545,10 @@ function create(){
             keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
             keyQ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
 
+            // INTERACTIONS
+
+            keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+
             // SAUT (BARRE D'ESPACE)
             spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
@@ -486,7 +572,7 @@ function create(){
         this.cameras.main.startFollow(player);        
 
         // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
-        /*this.cameras.main.setZoom(3, 3);*/
+        this.cameras.main.setZoom(3, 3);
 
     // ----------------------------------------------------- FIN FONCTION CREATE ----------------------------------------------
 }
@@ -494,6 +580,7 @@ function create(){
 //FONCTION UPDATE - s'exécute à chaque frame du jeu
 function update(){
     movementPlayer();
+    respawn();
 }
 
 // --------------------------------- FONCTIONS ---------------------------------
@@ -503,11 +590,9 @@ function update(){
     //PLATEFORMES NORMALES (grotte et donjon)
     function normalPlatsProperties() {
         speedMoveX = 150;
-        speedMoveY = 210;
+        speedMoveY = 280;
         playerInertie = 0;
         wallIce = false;
-
-        console.log("check wallIce + ", wallIce);
     }
 
     // PLATEFORMES NEIGE (ralentissement)
@@ -516,8 +601,6 @@ function update(){
         speedMoveY = 210;
         playerInertie = 0;
         wallIce = false;
-
-        console.log("check wallIce + ", wallIce);
     }
 
     // PLATEFORMES GLACE (inertie et wallgrab glissant)
@@ -526,8 +609,6 @@ function update(){
         speedMoveY = 210;
         playerInertie = 3000;
         wallIce = true;
-
-        console.log("check wallIce + ", wallIce);
     }
 
 // CAPACITES DU JOUEUR AU SOL
@@ -536,8 +617,9 @@ function onFloorProperties(){
     if(player.body.onFloor()){ // si le joueur est au sol
         wallJumpLocked = true; //on ne peut pas walljump à partir du sol
         unlockCommandes(); // on débloque les commandes
-        jumpLeft = jumpMax;
         
+        console.log("DETECT ON FLOOR");
+
         if(wallIce == false){ // si pas de glace
         // Coupe l'inertie du saut
         player.setAccelerationX(playerInertie);
@@ -587,32 +669,37 @@ function movementPlayer(){
     }
 
     // DEPLACEMENT - SAUT
-    if ((cursors.up.isDown || spaceBar.isDown || controller.up || controller.A) && commandesLocked == false && (jumpLeft >= 1) && (coolDownJump == false)){
+    
+    if ((cursors.up.isDown || spaceBar.isDown || controller.up || controller.A) && commandesLocked == false){
+        didPressJump = true;
 
-        // SAUT A TERRE
-        /*if(player.body.onFloor()){*/
-            
-            jumpLeft -= 1;
-            coolDownJump = true;
+        if(didPressJump == true){
+            if (player.body.onFloor()) {
+                // player can only double jump if it is on the floor
+                player.body.setVelocityY(-speedMoveY);
+                didPressJump = false;
+                console.log("saut = ", speedMoveY);
 
-            setTimeout(function() {
-                coolDownJump = false;
-                console.log("REJUMP !");            
-            }, 500);
+                setTimeout(function() {
+                    if(doubleJumpAbility == true){
+                        canDoubleJump = true;
+                        console.log("JUMP" + canDoubleJump);  
+                    }  
+                }, 500);              
 
-            //si touche haut appuyée ET que le perso touche le sol
-            player.setAccelerationY(10);
-            player.setMaxVelocity(speedMoveY);
-            player.setVelocityY(-speedMoveY); //alors vitesse verticale négative
-            //(on saute)
+            } else if (canDoubleJump == true) {
+                // player can only jump 2x (double jump)
+                canDoubleJump = false;
+                player.body.setVelocityY(-speedMoveY);
+                console.log("DOUBLE JUMP !")
+            }
+        }
     }
 
     // WALL JUMP
 
         // WALL JUMP GAUCHE
         if(player.body.blocked.left && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
-
-            jumpLeft = jumpMax;
 
             if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
@@ -624,9 +711,13 @@ function movementPlayer(){
             }
             
             if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
+                player.setAccelerationX(0);
+                
                 player.setAccelerationX(4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
+
+                console.log(player.acceleration);
 
                 // commandes bloquées
                 commandesLocked = true;
@@ -640,8 +731,6 @@ function movementPlayer(){
         // WALL JUMP DROIT
         if(player.body.blocked.right && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
 
-            jumpLeft = jumpMax;
-
             if(wallIce == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
                 player.setVelocityX(0);
@@ -652,6 +741,8 @@ function movementPlayer(){
             }
             
             if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
+                player.setAccelerationX(0);
+                
                 player.setAccelerationX(-4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
@@ -661,7 +752,7 @@ function movementPlayer(){
                 console.log(commandesLocked);
 
                 // commandes débloquées
-                setTimeout(unlockCommandes, 1000);
+                setTimeout(unlockCommandes, 2000);
             }
         }
 }
@@ -674,8 +765,35 @@ function collectEsprits(player, esprit){
     console.log(espritScore);
 }
 
+function pressBoutonRose(player, boutonRose){
+    if (cursors.down.isDown || keyE.isDown || controller.B){
+        porteRoseDisable = true;
+        porteRose.setActive(false).setVisible(false);
+    }
+
+}
+
+function pressBoutonVert(player, boutonVert){
+    if (cursors.down.isDown || keyE.isDown || controller.B){
+        porteVertDisable = true;
+        porteVert.setActive(false).setVisible(false);
+    }
+}
+
+function disablePorteVert(player, porteVert){
+    if(porteVertDisable == true){
+        porteVert.destroy();
+    }
+}
+
+function disablePorteRose(player, porteRose){
+    if (porteRoseDisable == true){
+        porteRose.destroy();
+    }
+}
+
 function unlockDoubleJump(player, powerUp){
-    jumpMax += 1;
+    doubleJumpAbility = true;
     powerUp.destroy(powerUp.x, powerUp.y);
 }
 
@@ -798,19 +916,46 @@ function killPlayer(){
 }
 
 // RESTART LE JEU
-/*function respawn(){
+function respawn(){
     if (gameOver == true){
-        
-        player.setTint(0xff0000);
-        player.anims.play('turn');
 
-        gameOver = false;
-        commandesLocked = true;
+        setTimeout(function() {
+            
+            this.scene.restart();
+            // VARIABLES
+            let platforms;
+            let player;
+            let espritsLayer;
 
-        console.log("Check death 2");
+            let cursors;
 
-        //replace le joueur à la zone de départ
-        
+            let health = 4;
+            let frameInvincible = 0;
+            let invincibleOn = false;
+
+            let gameOver = false;
+
+            let commandesLocked = false;
+            let wallJumpLocked = false;
+
+            let esprits;
+            let textScore;
+            let espritScore = 0;
+
+            let speedMoveX = 200;
+            let speedMoveY = 2000;
+            let playerInertie = 0;
+
+            let wallIce = false;
+
+            let doubleJumpAbility = false;
+            let didPressJump = false;
+            let canDoubleJump = false;
+
+            var controller = false; //manette
+        }, 1000);
+
+
         /*setTimeout(player.body.reset(1352, 680), 8000);
 
         setTimeout(function() {
@@ -824,10 +969,10 @@ function killPlayer(){
             wallJumpLocked = false;
 
             espritScore = 0;
-        }, 1000);
+        }, 1000);*/
 
     }
-}*/   
+}
         </script>
     </body>
 </html>
