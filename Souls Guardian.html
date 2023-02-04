@@ -54,11 +54,15 @@ let espritScore = 0;
 let porteVertDisable = false;
 let porteRoseDisable = false;
 
+let clefScore = 0;
+
 let wallIce = false;
 
-let doubleJumpAbility = false;
+let doubleJumpAbility = true;
 let didPressJump = false;
 let canDoubleJump = false;
+
+let picsRetractOn = false;
 
 var controller = false; //manette
 
@@ -97,12 +101,26 @@ function preload(){
         this.load.image('picsDroiteImage', 'assets/picsDroite.png');
         this.load.image('picsGaucheImage', 'assets/picsGauche.png');
 
+        this.load.image('retractPicsBasOn', 'assets/extractPicsBas.png');
+        this.load.image('retractPicsHautOn', 'assets/extractPicsHaut.png');
+        this.load.image('retractPicsDroiteOn', 'assets/extractPicsDroite.png');
+        this.load.image('retractPicsGaucheOn', 'assets/extractPicsGauche.png');
+
+        this.load.image('retractPicsBasOff', 'assets/retractPicsBas.png');
+        this.load.image('retractPicsHautOff', 'assets/retractPicsHaut.png');
+        this.load.image('retractPicsDroiteOff', 'assets/retractPicsDroite.png');
+        this.load.image('retractPicsGaucheOff', 'assets/retractPicsGauche.png');
+
         this.load.image('laveImage', 'assets/lava.png');
         
         this.load.image('picsGlaceBasImage', 'assets/picsGlaceBas.png');        
         this.load.image('picsGlaceHautImage', 'assets/picsGlaceHaut.png');
         this.load.image('picsGlaceDroiteImage', 'assets/picsGlaceDroite.png');
         this.load.image('picsGlaceGaucheImage', 'assets/picsGlaceGauche.png');
+
+        this.load.image('glaceFragileImage', 'assets/glaceFragile.png');
+
+
 
     // MOBS
         // Préchargement apparence monstre
@@ -122,6 +140,9 @@ function preload(){
     // PICK UPS OBJECTS
     this.load.image('espritCollectible', 'assets/esprit_in_game.png');
     this.load.image("powerUpImage", 'assets/powerUp.png');
+
+    this.load.image('clefsImage', 'assets/clef.png');
+    this.load.image('porteFinale', 'assets/porteFinale.png');
 
     // ----------------------------------------------------- FIN FONCTION PRELOAD ----------------------------------------------
 
@@ -144,7 +165,7 @@ function create(){
 
     // PLAYER
         //player = this.physics.add.sprite(1350, 650, 'perso');
-        player = this.physics.add.sprite(50, 1300, 'perso');
+        player = this.physics.add.sprite(500, 500, 'perso');
 
     // MAP DE TILED
         // TILEMAP    
@@ -152,6 +173,22 @@ function create(){
 
         // TILESET
             const tileset = carteDuNiveau.addTilesetImage("tuiles_de_jeu","Phaser_tuilesdejeu",);
+
+            //CRISTAUX
+                //récupération
+                cristaux = this.physics.add.staticGroup();
+                cristauxLayer = carteDuNiveau.getObjectLayer('cristauxLayer')['objects'];
+            
+                // creation
+                cristauxLayer.forEach(object => {
+                    let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+            
+                // collisions
+                this.physics.add.overlap(player, cristaux, killPlayer, null, this);
 
             // PLATEFORMES NORMALES []
                 const plateformes = carteDuNiveau.createLayer("plateformes",tileset);
@@ -187,7 +224,7 @@ function create(){
                     
                     // creation
                     boutonRoseLayer.forEach(object => {
-                    let obj = boutonRose.create(object.x + 16, object.y -16, 'boutonRoseImage');
+                    let obj = boutonRose.create(object.x + 16, object.y -11, 'boutonRoseImage');
                         obj.setScale(object.width/32, object.height/32);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
@@ -247,6 +284,38 @@ function create(){
                     // collisions
                     this.physics.add.collider(player, porteVert, disablePorteVert, null, this);
         
+            //CLEFS
+                //récupération
+                clef = this.physics.add.staticGroup();
+                clefsLayer = carteDuNiveau.getObjectLayer('clefsLayer')['objects'];
+                
+                // creation
+                clefsLayer.forEach(object => {
+                let obj = clef.create(object.x + 16, object.y -16, 'clefsImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.overlap(player, clef, collectClefs, null, this);
+
+            //PORTE FINALE
+                //récupération
+                porteFinale = this.physics.add.staticGroup();
+                porteFinaleLayer = carteDuNiveau.getObjectLayer('porteFinaleLayer')['objects'];
+                
+                // creation
+                porteFinaleLayer.forEach(object => {
+                let obj = porteFinale.create(object.x + 16, object.y+48, 'porteFinale');
+                    obj.setScale(object.width/32, object.height/96);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.collider(player, porteFinale, disablePorteFinale, null, this);
+
             // PICK-UP-OBJECTS 
                 
                 //ESPRITS
@@ -264,7 +333,7 @@ function create(){
 
                     // collisions
                     this.physics.add.overlap(player, esprits, collectEsprits, null, this);
-
+                    
                 // POWER UP - DOUBLE JUMP
 
                 powerUp = this.physics.add.staticGroup();
@@ -282,21 +351,23 @@ function create(){
                 this.physics.add.overlap(player, powerUp, unlockDoubleJump, null, this);
 
             // OBSTACLES
-                //CRISTAUX
+
+                // PLATEFORMES GLACE FRAGILES
+
                     //récupération
-                    cristaux = this.physics.add.staticGroup();
-                    cristauxLayer = carteDuNiveau.getObjectLayer('cristauxLayer')['objects'];
-                
-                    // creation
-                    cristauxLayer.forEach(object => {
-                        let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-                
-                    // collisions
-                    this.physics.add.overlap(player, cristaux, killPlayer, null, this);
+                    platsGlaceFragile = this.physics.add.staticGroup();
+                    platsGlaceFragileLayer = carteDuNiveau.getObjectLayer('platsGlaceFragileLayer')['objects'];
+                    
+                        // creation
+                        platsGlaceFragileLayer.forEach(object => {
+                            let obj = platsGlaceFragile.create(object.x + 16, object.y -16, 'glaceFragileImage');
+                            obj.setScale(object.width/32, object.height/32);
+                            obj.body.width = object.width;
+                            obj.body.height = object.height;
+                        });
+                    
+                        // collisions
+                        this.physics.add.collider(player, platsGlaceFragile, destructionGlace, null, this);
 
                 // PICS BAS
 
@@ -425,7 +496,7 @@ function create(){
                     
                     // creation
                     picsGlaceGaucheLayer.forEach(object => {
-                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');monstresRight
+                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');
                         obj.setScale(object.width/32, object.height/32);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
@@ -433,6 +504,124 @@ function create(){
                     
                     // collisions
                     this.physics.add.overlap(player, picsGlaceGauche, killPlayer, null, this);
+
+                // PICS GLACE HAUT
+
+                    //récupération
+                    picsGlaceHaut = this.physics.add.staticGroup();
+                    picsGlaceHautLayer = carteDuNiveau.getObjectLayer('picsGlaceHautLayer')['objects'];
+                    
+                    // creation
+                    picsGlaceHautLayer.forEach(object => {
+                        let obj = picsGlaceHaut.create(object.x + 16, object.y -16, 'picsGlaceHautImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, picsGlaceHaut, killPlayer, null, this);
+
+                // TRIGGER PICS GLACE HAUT
+
+                    //récupération
+                    triggerPicsGlace = this.physics.add.staticGroup();
+                    triggerPicsGlaceLayer = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer')['objects'];
+                    
+                    // creation
+                    triggerPicsGlaceLayer.forEach(object => {
+                        let obj = triggerPicsGlace.create(object.x + 16, object.y -16, 'picsGlaceHautImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+                    
+                    // collisions
+                    this.physics.add.overlap(player, triggerPicsGlace, physicAllowPicGlace, null, this);
+
+                    // PICS RETRACTABLES BAS
+
+                        // OFF
+                        //récupération
+                        retractPicsBasOff = this.physics.add.staticGroup();
+                        retractPicsBasOffLayer = carteDuNiveau.getObjectLayer('retractPicsBasOffLayer')['objects'];
+                        // creation
+                        retractPicsBasOffLayer.forEach(object => {
+                            let obj = retractPicsBasOff.create(object.x +16, object.y-7, 'retractPicsBasOff');
+                            obj.setScale(object.width/32, object.height/32);
+                            obj.body.width = object.width;
+                            obj.body.height = object.height;
+                        });
+
+                        // ON
+                            //récupération
+                            retractPicsBas = this.physics.add.staticGroup();
+                            retractPicsBasLayer = carteDuNiveau.getObjectLayer('retractPicsBasLayer')['objects'];
+                            // creation
+                            retractPicsBasLayer.forEach(object => {
+                                let obj = retractPicsBas.create(object.x + 16, object.y -16, 'retractPicsBasOn');
+                                obj.setScale(object.width/32, object.height/32);
+                                obj.body.width = object.width;
+                                obj.body.height = object.height;
+                            });
+                            // collisions
+                            this.physics.add.overlap(player, retractPicsBas, picsRetractablesKill, null, this);
+
+                    // PICS RETRACTABLES DROITE
+
+                        // OFF
+                            //récupération
+                            retractPicsDroiteOff = this.physics.add.staticGroup();
+                            retractPicsDroiteOffLayer = carteDuNiveau.getObjectLayer('retractPicsDroiteOffLayer')['objects'];
+                            // creation
+                            retractPicsDroiteOffLayer.forEach(object => {
+                                let obj = retractPicsDroiteOff.create(object.x +24, object.y-16, 'retractPicsDroiteOff');
+                                obj.setScale(object.width/32, object.height/32);
+                                obj.body.width = object.width;
+                                obj.body.height = object.height;
+                            });
+
+                        // ON
+                            //récupération
+                            retractPicsDroite = this.physics.add.staticGroup();
+                            retractPicsDroiteLayer = carteDuNiveau.getObjectLayer('retractPicsDroiteLayer')['objects'];
+                            // creation
+                            retractPicsDroiteLayer.forEach(object => {
+                                let obj = retractPicsDroite.create(object.x + 16, object.y -16, 'retractPicsDroiteOn');
+                                obj.setScale(object.width/32, object.height/32);
+                                obj.body.width = object.width;
+                                obj.body.height = object.height;
+                            });
+                            // collisions
+                            this.physics.add.overlap(player, retractPicsDroite, picsRetractablesKill, null, this);
+
+                    // PICS RETRACTABLES GAUCHE
+
+                        // OFF
+                            //récupération
+                            retractPicsGaucheOff = this.physics.add.staticGroup();
+                            retractPicsGaucheOffLayer = carteDuNiveau.getObjectLayer('retractPicsGaucheOffLayer')['objects'];
+                            // creation
+                            retractPicsGaucheOffLayer.forEach(object => {
+                                let obj = retractPicsGaucheOff.create(object.x+7, object.y-16, 'retractPicsGaucheOff');
+                                obj.setScale(object.width/32, object.height/32);
+                                obj.body.width = object.width;
+                                obj.body.height = object.height;
+                            });
+
+                        // ON
+                            //récupération
+                            retractPicsGauche = this.physics.add.staticGroup();
+                            retractPicsGaucheLayer = carteDuNiveau.getObjectLayer('retractPicsGaucheLayer')['objects'];
+                            // creation
+                            retractPicsGaucheLayer.forEach(object => {
+                                let obj = retractPicsDroite.create(object.x + 16, object.y -16, 'retractPicsGaucheOn');
+                                obj.setScale(object.width/32, object.height/32);
+                                obj.body.width = object.width;
+                                obj.body.height = object.height;
+                            });
+                            // collisions
+                            this.physics.add.overlap(player, retractPicsGauche, picsRetractablesKill, null, this);
 
             //MOBS 
                 // MONSTRES VERS DROITE
@@ -579,8 +768,9 @@ function create(){
 
 //FONCTION UPDATE - s'exécute à chaque frame du jeu
 function update(){
+    picsRetractablesAnim();
     movementPlayer();
-    respawn();
+    //respawn();
 }
 
 // --------------------------------- FONCTIONS ---------------------------------
@@ -598,7 +788,7 @@ function update(){
     // PLATEFORMES NEIGE (ralentissement)
     function neigePlatsProperties() {
         speedMoveX = 100;
-        speedMoveY = 210;
+        speedMoveY = 280;
         playerInertie = 0;
         wallIce = false;
     }
@@ -606,7 +796,7 @@ function update(){
     // PLATEFORMES GLACE (inertie et wallgrab glissant)
     function glacePlatsProperties() {
         speedMoveX = 150;
-        speedMoveY = 210;
+        speedMoveY = 280;
         playerInertie = 3000;
         wallIce = true;
     }
@@ -765,6 +955,18 @@ function collectEsprits(player, esprit){
     console.log(espritScore);
 }
 
+function collectClefs(player, clef){
+    clef.destroy(clef.x, clef.y);
+    clefScore ++;
+    console.log(clefScore);
+}
+
+function disablePorteFinale(player, porteFinale){
+    if (clefScore == 2){
+        porteFinale.destroy();        
+    }
+}
+
 function pressBoutonRose(player, boutonRose){
     if (cursors.down.isDown || keyE.isDown || controller.B){
         porteRoseDisable = true;
@@ -796,6 +998,59 @@ function unlockDoubleJump(player, powerUp){
     doubleJumpAbility = true;
     powerUp.destroy(powerUp.x, powerUp.y);
 }
+
+function destructionGlace(player, platsGlaceFragile){
+    speedMoveX = 150;
+    speedMoveY = 280;
+    playerInertie = 3000;
+    wallIce = true;
+    setTimeout(function() {
+        platsGlaceFragile.destroy();
+    }, 1000); 
+}
+
+function physicAllowPicGlace(player, triggerPicsGlace){
+
+}
+
+    // ANIMATION DES PICS RETRACTABLES
+
+        function picsRetractablesAnim() {
+            if (picsRetractOn == false) {
+                retractPicsBasOff.setActive(true).setVisible(true);
+                retractPicsBas.setActive(false).setVisible(false);
+
+                retractPicsDroiteOff.setActive(true).setVisible(true);
+                retractPicsDroite.setActive(false).setVisible(false);
+                
+                console.log("PICS MORTELS = ", picsRetractOn);
+
+                setTimeout(function() {
+                    picsRetractOn = true;
+                }, 2000);   
+            }
+
+            if (picsRetractOn == true) {
+                retractPicsBasOff.setActive(false).setVisible(false);
+                retractPicsBas.setActive(true).setVisible(true);
+
+                retractPicsDroiteOff.setActive(false).setVisible(false);
+                retractPicsDroite.setActive(true).setVisible(true);
+
+                console.log("PICS MORTELS = ", picsRetractOn);
+
+                setTimeout(function() {
+                    picsRetractOn = false;
+                }, 2000);   
+            }
+        }
+
+        function picsRetractablesKill(player, retractPicsBas){
+            if (picsRetractOn == true){
+                console.log("KILL PLAYER AVEC PICS !");
+                killPlayer();
+            }
+        }
 
 // Gestion des frames d'invulnérabilité
 function getContactMob() {
@@ -916,7 +1171,7 @@ function killPlayer(){
 }
 
 // RESTART LE JEU
-function respawn(){
+/*function respawn(){
     if (gameOver == true){
 
         setTimeout(function() {
@@ -953,7 +1208,7 @@ function respawn(){
             let canDoubleJump = false;
 
             var controller = false; //manette
-        }, 1000);
+        }, 1000);*/
 
 
         /*setTimeout(player.body.reset(1352, 680), 8000);
@@ -969,10 +1224,10 @@ function respawn(){
             wallJumpLocked = false;
 
             espritScore = 0;
-        }, 1000);*/
+        }, 1000);
 
     }
-}
+}*/
         </script>
     </body>
 </html>
