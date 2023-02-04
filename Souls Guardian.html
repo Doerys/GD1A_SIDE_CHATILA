@@ -51,11 +51,12 @@ let esprits;
 let textScore;
 let espritScore = 0;
 
-let porteVertDisable = false;
+let porteVertDisable = true;
 let porteRoseDisable = false;
 
 let clefScore = 0;
 
+let wallNeige = false;
 let wallIce = false;
 
 let doubleJumpAbility = true;
@@ -63,6 +64,8 @@ let didPressJump = false;
 let canDoubleJump = false;
 
 let picsRetractOn = false;
+
+let chutePicGlace = false;
 
 var controller = false; //manette
 
@@ -165,7 +168,9 @@ function create(){
 
     // PLAYER
         //player = this.physics.add.sprite(1350, 650, 'perso');
-        player = this.physics.add.sprite(500, 500, 'perso');
+        //player = this.physics.add.sprite(450, 900, 'perso');
+        player = this.physics.add.sprite(450, 500, 'perso');
+        //player = this.physics.add.sprite(1350, 650, 'perso');
 
     // MAP DE TILED
         // TILEMAP    
@@ -445,7 +450,7 @@ function create(){
                     
                     // creation
                     laveLayer.forEach(object => {
-                        let obj = lave.create(object.x + 16, object.y -16, 'laveImage');
+                        let obj = lave.create(object.x + 16, object.y -10, 'laveImage');
                         obj.setScale(object.width/32, object.height/32);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
@@ -505,39 +510,40 @@ function create(){
                     // collisions
                     this.physics.add.overlap(player, picsGlaceGauche, killPlayer, null, this);
 
-                // PICS GLACE HAUT
-
-                    //récupération
-                    picsGlaceHaut = this.physics.add.staticGroup();
-                    picsGlaceHautLayer = carteDuNiveau.getObjectLayer('picsGlaceHautLayer')['objects'];
-                    
-                    // creation
-                    picsGlaceHautLayer.forEach(object => {
-                        let obj = picsGlaceHaut.create(object.x + 16, object.y -16, 'picsGlaceHautImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-                    
-                    // collisions
-                    this.physics.add.overlap(player, picsGlaceHaut, killPlayer, null, this);
-
                 // TRIGGER PICS GLACE HAUT
 
                     //récupération
                     triggerPicsGlace = this.physics.add.staticGroup();
                     triggerPicsGlaceLayer = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer')['objects'];
-                    
+
                     // creation
                     triggerPicsGlaceLayer.forEach(object => {
-                        let obj = triggerPicsGlace.create(object.x + 16, object.y -16, 'picsGlaceHautImage');
+                        let obj = triggerPicsGlace.create(object.x + 16, object.y+16).setVisible(false);
                         obj.setScale(object.width/32, object.height/32);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
                     });
-                    
+
                     // collisions
-                    this.physics.add.overlap(player, triggerPicsGlace, physicAllowPicGlace, null, this);
+                    this.physics.add.overlap(player, triggerPicsGlace, detectTrigger, null, this);
+
+                // PICS GLACE HAUT (QUI TOMBE)
+
+                    //récupération
+                    picsGlaceHaut = this.physics.add.group();
+                    picsGlaceHautLayer = carteDuNiveau.getObjectLayer('picsGlaceHautLayer');
+              
+                    // creation
+                    picsGlaceHautLayer.objects.forEach( picsGlaceHautLayer => {
+                        const PicsGlaceHautLayer = picsGlaceHaut.create( picsGlaceHautLayer.x+16, picsGlaceHautLayer.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(triggerPicsGlace, picsGlaceHaut, physicAllowPicGlace, null, this);
+                    this.physics.add.overlap(player, picsGlaceHaut, killPlayer, null, this);
+                    this.physics.add.collider(plateformesNeige, picsGlaceHaut, destroyPicGlace, null, this);
+                    this.physics.add.collider(plateformesGlace, picsGlaceHaut, destroyPicGlace, null, this);
+                    this.physics.add.collider(platsGlaceFragile, picsGlaceHaut, destroyPicGlace, null, this);
 
                     // PICS RETRACTABLES BAS
 
@@ -659,7 +665,7 @@ function create(){
                     
                     // création
                     limitesMonstresRightLayer.objects.forEach( limitesMonstresRightLayer => {
-                        const LimitesMonstresRightLayer = limitesMonstresRight.create( limitesMonstresRightLayer.x + 16, limitesMonstresRightLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+                        const LimitesMonstresRightLayer = limitesMonstresRight.create( limitesMonstresRightLayer.x + 16, limitesMonstresRightLayer.y +16).setVisible(false).body.setAllowGravity(false).setImmovable(true);
                     });
 
                     // collisions
@@ -672,7 +678,7 @@ function create(){
                     
                     // création
                     limitesMonstresLeftLayer.objects.forEach( limitesMonstresLeftLayer => {
-                        const LimitesMonstresLeftLayer = limitesMonstresLeft.create( limitesMonstresLeftLayer.x + 16, limitesMonstresLeftLayer.y +16).body.setAllowGravity(false).setImmovable(true);
+                        const LimitesMonstresLeftLayer = limitesMonstresLeft.create( limitesMonstresLeftLayer.x + 16, limitesMonstresLeftLayer.y +16).setVisible(false).body.setAllowGravity(false).setImmovable(true);
                     });
 
                     // collisions
@@ -782,6 +788,7 @@ function update(){
         speedMoveX = 150;
         speedMoveY = 280;
         playerInertie = 0;
+        wallNeige = false;
         wallIce = false;
     }
 
@@ -790,6 +797,7 @@ function update(){
         speedMoveX = 100;
         speedMoveY = 280;
         playerInertie = 0;
+        wallNeige = true;
         wallIce = false;
     }
 
@@ -798,6 +806,7 @@ function update(){
         speedMoveX = 150;
         speedMoveY = 280;
         playerInertie = 3000;
+        wallNeige = false;
         wallIce = true;
     }
 
@@ -807,8 +816,6 @@ function onFloorProperties(){
     if(player.body.onFloor()){ // si le joueur est au sol
         wallJumpLocked = true; //on ne peut pas walljump à partir du sol
         unlockCommandes(); // on débloque les commandes
-        
-        console.log("DETECT ON FLOOR");
 
         if(wallIce == false){ // si pas de glace
         // Coupe l'inertie du saut
@@ -891,16 +898,19 @@ function movementPlayer(){
         // WALL JUMP GAUCHE
         if(player.body.blocked.left && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
 
-            if(wallIce == true){ // si glace : on glisse le long du mur
-                player.setVelocityY(20);
+            if(wallNeige == true){ // si neige : on glisse le long du mur
+                player.setVelocityY(30);
                 player.setVelocityX(0);
             }
-            else if(wallIce == false){ // si normal : on reste collé contre le mur
-                player.setVelocityY(-5);
+            else if((wallNeige == false) && (wallIce == false)){ // si normal : on reste collé contre le mur
+                player.setVelocityY(-12);
                 player.setVelocityX(-2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
+            if ((cursors.up.isDown || spaceBar.isDown || controller.up || controller.A) && (wallIce == false)){ // on se repousse du mur
+                // commandes bloquées
+                commandesLocked = true;
+
                 player.setAccelerationX(0);
                 
                 player.setAccelerationX(4000);
@@ -909,40 +919,49 @@ function movementPlayer(){
 
                 console.log(player.acceleration);
 
-                // commandes bloquées
-                commandesLocked = true;
-                console.log(commandesLocked)
+                /*setTimeout(function(){
+                    canDoubleJump = true;
+                }, 100);*/
                 
                 // commandes débloquées
-                setTimeout(unlockCommandes, 2000);
+                setTimeout(function() {
+                unlockCommandes();
+                player.setAccelerationX(0);                
+                }, 2000);
             }
         }
 
         // WALL JUMP DROIT
         if(player.body.blocked.right && (keyWallGrap.isDown || controller.R2 || controller.L2) && wallJumpLocked == false){
 
-            if(wallIce == true){ // si glace : on glisse le long du mur
+            if(wallNeige == true){ // si glace : on glisse le long du mur
                 player.setVelocityY(20);
                 player.setVelocityX(0);
             }
-            else if(wallIce == false){ // si normal : on reste collé contre le mur
-                player.setVelocityY(-5);
+            else if((wallNeige == false) && (wallIce == false)){ // si normal : on reste collé contre le mur
+                player.setVelocityY(-12);
                 player.setVelocityX(2);
             }
             
-            if (cursors.up.isDown || spaceBar.isDown || controller.up || controller.A){ // on se repousse du mur
+            if ((cursors.up.isDown || spaceBar.isDown || controller.up || controller.A) && (wallIce == false)){ // on se repousse du mur
+                // commandes bloquées
+                commandesLocked = true;
+                
                 player.setAccelerationX(0);
                 
                 player.setAccelerationX(-4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
 
-                // commandes bloquées
-                commandesLocked = true;
-                console.log(commandesLocked);
+                /*setTimeout(function(){
+                    canDoubleJump = true;
+                }, 100);*/
 
                 // commandes débloquées
-                setTimeout(unlockCommandes, 2000);
+                setTimeout(function() {
+                unlockCommandes();
+                player.setAccelerationX(0);                
+                }, 2000);
             }
         }
 }
@@ -1003,14 +1022,30 @@ function destructionGlace(player, platsGlaceFragile){
     speedMoveX = 150;
     speedMoveY = 280;
     playerInertie = 3000;
-    wallIce = true;
+    wallNeige = true;
     setTimeout(function() {
         platsGlaceFragile.destroy();
     }, 1000); 
 }
 
-function physicAllowPicGlace(player, triggerPicsGlace){
+function physicAllowPicGlace(triggerPicsGlace, picsGlaceHaut){
+    if (chutePicGlace == true){
+        chutePicGlace = false;
+        triggerPicsGlace.destroy();
+        
+        setTimeout(function(){
+            picsGlaceHaut.body.setAllowGravity(true);
+        }, 500);        
+    }
 
+}
+
+function detectTrigger(player, triggerPicsGlace){
+    chutePicGlace = true;
+}
+
+function destroyPicGlace(picsGlaceHaut){
+    picsGlaceHaut.destroy();
 }
 
     // ANIMATION DES PICS RETRACTABLES
@@ -1022,8 +1057,6 @@ function physicAllowPicGlace(player, triggerPicsGlace){
 
                 retractPicsDroiteOff.setActive(true).setVisible(true);
                 retractPicsDroite.setActive(false).setVisible(false);
-                
-                console.log("PICS MORTELS = ", picsRetractOn);
 
                 setTimeout(function() {
                     picsRetractOn = true;
@@ -1036,8 +1069,6 @@ function physicAllowPicGlace(player, triggerPicsGlace){
 
                 retractPicsDroiteOff.setActive(false).setVisible(false);
                 retractPicsDroite.setActive(true).setVisible(true);
-
-                console.log("PICS MORTELS = ", picsRetractOn);
 
                 setTimeout(function() {
                     picsRetractOn = false;
@@ -1201,7 +1232,7 @@ function killPlayer(){
             let speedMoveY = 2000;
             let playerInertie = 0;
 
-            let wallIce = false;
+            let wallNeige = false;
 
             let doubleJumpAbility = false;
             let didPressJump = false;
