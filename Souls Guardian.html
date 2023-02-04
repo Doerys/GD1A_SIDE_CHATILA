@@ -204,7 +204,7 @@ function create(){
                     
                     // creation
                     porteRoseLayer.forEach(object => {
-                    let obj = porteRose.create(object.x + 16, object.y -16, 'porteRoseImage');
+                    let obj = porteRose.create(object.x + 16, object.y +32, 'porteRoseImage');
                         obj.setScale(object.width/32, object.height/64);
                         obj.body.width = object.width;
                         obj.body.height = object.height;
