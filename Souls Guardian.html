@@ -23,7 +23,7 @@
                     arcade: {
                     gravity: { y: 600 },
                     fps: 50,
-                    debug: true
+                    debug: false
                     }},
 
                 input:{gamepad:true},
@@ -60,7 +60,7 @@ let textclefScore; // texte de score clef
 let wallNeige = false; // contact tile neige
 let wallIce = false; // contact tile glace
 
-let doubleJumpAbility = true; // activation Double Jump
+let doubleJumpAbility = false; // activation Double Jump
 let didPressJump = false; // pression bouton Jump
 let canDoubleJump = false; // possibilité Double Jump
 
@@ -185,11 +185,11 @@ function create(){
 
 // PLAYER
     
-    //player = this.physics.add.sprite(1350, 650, 'perso'); // SPAWN DEBUT BIOME CAVERNE (DEPART NORMAL)
+    player = this.physics.add.sprite(1350, 650, 'perso'); // SPAWN DEBUT BIOME CAVERNE (DEPART NORMAL)
     
     //player = this.physics.add.sprite(690, 1450, 'perso'); // SPAWN DEBUT BIOME DONJON
     
-    player = this.physics.add.sprite(462, 480, 'perso'); // SPAWN DEBUT BIOME MONTAGNE
+    //player = this.physics.add.sprite(462, 480, 'perso'); // SPAWN DEBUT BIOME MONTAGNE
     
     player.setSize(24, 48, true); // Taille hitbox personnage
 
@@ -1528,6 +1528,7 @@ function movementPlayer(){
         if(player.body.touching.right || player.body.touching.left || player.body.touching.up){ // si touché sur les côtés
             if(invincibleOn == false){ // verifie que player n'est pas invulnérable
                 health -= 1; // enlève 1 PV
+                this.cameras.main.shake(100,0.02,false,null); // mouvement de caméra pour blessure
                 gestionLife(); // change l'UI de vie
 
                 invincible(); // active la frame d'invulnérabilité
@@ -1546,6 +1547,7 @@ function movementPlayer(){
             if(invincibleOn == false){
 
                 health -= 1;
+                this.cameras.main.shake(100,0.02,false,null); 
                 gestionLife();
 
                 invincible();
