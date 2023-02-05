@@ -7,14 +7,15 @@
 
         <style type="text/css"> body { margin: 0; }</style>>
     </head>
-    <body>
+    <body style="background-color:#000000; text-align: center; vertical-align: middle;">
+
         <script type="text/javascript">
             
             var config = {
                 type: Phaser.AUTO,
 
                 // Dimensions de l'espace de la fenêtre alloué au jeu
-                width: 1200, height: 750,
+                width: 600, height: 400,
                 
                 // Physique du jeu (gravité)
                 physics: {
@@ -22,7 +23,7 @@
                     arcade: {
                     gravity: { y: 600 },
                     fps: 50,
-                    debug: true
+                    debug: false
                     }},
 
                 input:{gamepad:true},
@@ -34,7 +35,6 @@
 // VARIABLES
 let platforms;
 let player;
-let espritsLayer;
 
 let cursors;
 
@@ -51,7 +51,7 @@ let esprits;
 let textScore;
 let espritScore = 0;
 
-let porteVertDisable = true;
+let porteVertDisable = false;
 let porteRoseDisable = false;
 
 let clefScore = 0;
@@ -59,13 +59,24 @@ let clefScore = 0;
 let wallNeige = false;
 let wallIce = false;
 
-let doubleJumpAbility = true;
+let doubleJumpAbility = false;
 let didPressJump = false;
 let canDoubleJump = false;
 
 let picsRetractOn = false;
 
 let chutePicGlace = false;
+let chutePicGlace2 = false;
+let chutePicGlace3 = false;
+let chutePicGlace4 = false;
+let chutePicGlace5 = false;
+let chutePicGlace6 = false;
+let chutePicGlace7 = false;
+let chutePicGlace8 = false;
+let chutePicGlace9 = false;
+let chutePicGlace10 = false;
+let chutePicGlace11 = false;
+let chutePicGlace12 = false;
 
 var controller = false; //manette
 
@@ -73,12 +84,13 @@ var controller = false; //manette
 function preload(){
 
     // Player
-    this.load.spritesheet('perso','assets/perso.png',
-        { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('perso','assets/perso_spritesheet.png',
+        { frameWidth: 32, frameHeight: 64 });
 
     // BACKGROUND
     this.load.image('background', 'assets/background.png');
-    this.load.image('secondPlan', 'assets/secondPlan.png'); 
+    this.load.image('secondPlan', 'assets/secondPlan.png');
+    this.load.image('secondPlanMontagne', 'assets/secondPlan_montagne.png');
 
     // UI
         // UI - LIFE
@@ -157,20 +169,34 @@ function create(){
     // ARRIERE PLAN
 
         // ARRIERE PLAN - BACKGROUND
-        this.backgroundParallax = this.add.tileSprite(0, 0, 1600, 1600, "background");
-        this.backgroundParallax.setOrigin(0, 0);
-        this.backgroundParallax.setScrollFactor(0.7, 1);
+        this.background = this.add.tileSprite(0, 0, 1600, 1600, "background");
+        this.background.setOrigin(0, 0);
 
         // ARRIERE PLAN - SECOND PLAN
-        this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
+        this.sndPlan = this.add.tileSprite(0, 0, 1600, 1600, "secondPlan");
+        this.sndPlan.setOrigin(0, 0);
+
+        // ARRIERE PLAN - Second plan montagne (effet parallaxe)
+        this.sndPlanParallax = this.add.tileSprite(0, 0, 1600, 1600, "secondPlanMontagne");
         this.sndPlanParallax.setOrigin(0, 0);
-        this.sndPlanParallax.setScrollFactor(0.5, 1);
+        this.sndPlanParallax.setScrollFactor(0.8, 1);
 
     // PLAYER
-        //player = this.physics.add.sprite(1350, 650, 'perso');
-        //player = this.physics.add.sprite(450, 900, 'perso');
-        player = this.physics.add.sprite(450, 500, 'perso');
-        //player = this.physics.add.sprite(1350, 650, 'perso');
+        
+        // SPAWN DEPART
+        player = this.physics.add.sprite(1350, 650, 'perso');
+        
+        // SPAWN DEBUT BIOME DONJON
+        //player = this.physics.add.sprite(690, 1450, 'perso');
+        
+        // SPAWN DEBUT BIOME MONTAGNE
+        //player = this.physics.add.sprite(450, 500, 'perso');
+        
+        // SPAWN MILIEU BIOME DE MONTAGNE
+        //player = this.physics.add.sprite(200, 200, 'perso');
+
+        player.setSize(24, 48, true);
+        player.setOffset(4, 15);
 
     // MAP DE TILED
         // TILEMAP    
@@ -186,7 +212,7 @@ function create(){
             
                 // creation
                 cristauxLayer.forEach(object => {
-                    let obj = cristaux.create(object.x + 16, object.y -16, 'cristauxImage');
+                    let obj = cristaux.create(object.x + 16, object.y -10, 'cristauxImage');
                     obj.setScale(object.width/32, object.height/32);
                     obj.body.width = object.width;
                     obj.body.height = object.height;
@@ -194,6 +220,57 @@ function create(){
             
                 // collisions
                 this.physics.add.overlap(player, cristaux, killPlayer, null, this);
+
+            // PICS GLACE BAS
+
+                //récupération
+                picsGlaceBas = this.physics.add.staticGroup();
+                picsGlaceBasLayer = carteDuNiveau.getObjectLayer('picsGlaceBasLayer')['objects'];
+                
+                // creation
+                picsGlaceBasLayer.forEach(object => {
+                    let obj = picsGlaceBas.create(object.x + 16, object.y -10, 'picsGlaceBasImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+                
+                // collisions
+                this.physics.add.overlap(player, picsGlaceBas, killPlayer, null, this);
+
+            // PICS GLACE DROITE
+
+                //récupération
+                picsGlaceDroite = this.physics.add.staticGroup();
+                picsGlaceDroiteLayer = carteDuNiveau.getObjectLayer('picsGlaceDroiteLayer')['objects'];
+                
+                // creation
+                picsGlaceDroiteLayer.forEach(object => {
+                    let obj = picsGlaceDroite.create(object.x + 22, object.y -16, 'picsGlaceDroiteImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+                
+                // collisions
+                this.physics.add.overlap(player, picsGlaceDroite, killPlayer, null, this);
+
+            // PICS GLACE GAUCHE
+
+                //récupération
+                picsGlaceGauche = this.physics.add.staticGroup();
+                picsGlaceGaucheLayer = carteDuNiveau.getObjectLayer('picsGlaceGaucheLayer')['objects'];
+                
+                // creation
+                picsGlaceGaucheLayer.forEach(object => {
+                    let obj = picsGlaceGauche.create(object.x + 10, object.y -16, 'picsGlaceGaucheImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+                
+                // collisions
+                this.physics.add.overlap(player, picsGlaceGauche, killPlayer, null, this);
 
             // PLATEFORMES NORMALES []
                 const plateformes = carteDuNiveau.createLayer("plateformes",tileset);
@@ -216,144 +293,6 @@ function create(){
                 // collisions
                 plateformesGlace.setCollisionByProperty({estGlace : true });
                 this.physics.add.collider(player, plateformesGlace, glacePlatsProperties, null, this);
-
-        // OBJECTS
-
-            // ELEMENTS INTERACTIFS
-
-                // BOUTON ROSE
-
-                    //récupération
-                    boutonRose = this.physics.add.staticGroup();
-                    boutonRoseLayer = carteDuNiveau.getObjectLayer('boutonRoseLayer')['objects'];
-                    
-                    // creation
-                    boutonRoseLayer.forEach(object => {
-                    let obj = boutonRose.create(object.x + 16, object.y -11, 'boutonRoseImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-
-                    // collisions
-                    this.physics.add.overlap(player, boutonRose, pressBoutonRose, null, this);
-
-                // PORTE ROSE
-
-                    //récupération
-                    porteRose = this.physics.add.staticGroup();
-                    porteRoseLayer = carteDuNiveau.getObjectLayer('porteRoseLayer')['objects'];
-                    
-                    // creation
-                    porteRoseLayer.forEach(object => {
-                    let obj = porteRose.create(object.x + 16, object.y +32, 'porteRoseImage');
-                        obj.setScale(object.width/32, object.height/64);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-
-                    // collisions
-                    this.physics.add.collider(player, porteRose, disablePorteRose, null, this);
-
-                // BOUTON VERT
-
-                    //récupération
-                    boutonVert = this.physics.add.staticGroup();
-                    boutonVertLayer = carteDuNiveau.getObjectLayer('boutonVertLayer')['objects'];
-                    
-                    // creation
-                    boutonVertLayer.forEach(object => {
-                    let obj = boutonVert.create(object.x + 16, object.y -16, 'boutonVertImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-
-                    // collisions
-                    this.physics.add.overlap(player, boutonVert, pressBoutonVert, null, this);
-
-                // PORTE VERTE
-
-                    //récupération
-                    porteVert = this.physics.add.staticGroup();
-                    porteVertLayer = carteDuNiveau.getObjectLayer('porteVerteLayer')['objects'];
-                    
-                    // creation
-                    porteVertLayer.forEach(object => {
-                    let obj = porteVert.create(object.x + 16, object.y +32, 'porteVertImage');
-                        obj.setScale(object.width/32, object.height/64);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-
-                    // collisions
-                    this.physics.add.collider(player, porteVert, disablePorteVert, null, this);
-        
-            //CLEFS
-                //récupération
-                clef = this.physics.add.staticGroup();
-                clefsLayer = carteDuNiveau.getObjectLayer('clefsLayer')['objects'];
-                
-                // creation
-                clefsLayer.forEach(object => {
-                let obj = clef.create(object.x + 16, object.y -16, 'clefsImage');
-                    obj.setScale(object.width/32, object.height/32);
-                    obj.body.width = object.width;
-                    obj.body.height = object.height;
-                });
-
-                // collisions
-                this.physics.add.overlap(player, clef, collectClefs, null, this);
-
-            //PORTE FINALE
-                //récupération
-                porteFinale = this.physics.add.staticGroup();
-                porteFinaleLayer = carteDuNiveau.getObjectLayer('porteFinaleLayer')['objects'];
-                
-                // creation
-                porteFinaleLayer.forEach(object => {
-                let obj = porteFinale.create(object.x + 16, object.y+48, 'porteFinale');
-                    obj.setScale(object.width/32, object.height/96);
-                    obj.body.width = object.width;
-                    obj.body.height = object.height;
-                });
-
-                // collisions
-                this.physics.add.collider(player, porteFinale, disablePorteFinale, null, this);
-
-            // PICK-UP-OBJECTS 
-                
-                //ESPRITS
-                    //récupération
-                    esprits = this.physics.add.staticGroup();
-                    espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
-                    
-                    // creation
-                    espritsLayer.forEach(object => {
-                    let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-
-                    // collisions
-                    this.physics.add.overlap(player, esprits, collectEsprits, null, this);
-                    
-                // POWER UP - DOUBLE JUMP
-
-                powerUp = this.physics.add.staticGroup();
-                powerUpLayer = carteDuNiveau.getObjectLayer('powerUpLayer')['objects'];
-                
-                // creation
-                powerUpLayer.forEach(object => {
-                let obj = powerUp.create(object.x + 16, object.y -16, 'powerUpImage');
-                    obj.setScale(object.width/32, object.height/32);
-                    obj.body.width = object.width;
-                    obj.body.height = object.height;
-                });
-
-                // collisions
-                this.physics.add.overlap(player, powerUp, unlockDoubleJump, null, this);
 
             // OBSTACLES
 
@@ -459,91 +398,357 @@ function create(){
                     // collisions
                     this.physics.add.overlap(player, lave, killPlayer, null, this);
 
-                // PICS GLACE BAS
+// TRIGGER PICS GLACE HAUT
 
-                    //récupération
-                    picsGlaceBas = this.physics.add.staticGroup();
-                    picsGlaceBasLayer = carteDuNiveau.getObjectLayer('picsGlaceBasLayer')['objects'];
-                    
-                    // creation
-                    picsGlaceBasLayer.forEach(object => {
-                        let obj = picsGlaceBas.create(object.x + 16, object.y -16, 'picsGlaceBasImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-                    
-                    // collisions
-                    this.physics.add.overlap(player, picsGlaceBas, killPlayer, null, this);
+    //récupération
+    triggerPicsGlace = this.physics.add.staticGroup(); triggerPicsGlaceLayer = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer')['objects'];
 
-                // PICS GLACE DROITE
+    // creation
+    triggerPicsGlaceLayer.forEach(object => {let obj = triggerPicsGlace.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
 
-                    //récupération
-                    picsGlaceDroite = this.physics.add.staticGroup();
-                    picsGlaceDroiteLayer = carteDuNiveau.getObjectLayer('picsGlaceDroiteLayer')['objects'];
-                    
-                    // creation
-                    picsGlaceDroiteLayer.forEach(object => {
-                        let obj = picsGlaceDroite.create(object.x + 16, object.y -16, 'picsGlaceDroiteImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-                    
-                    // collisions
-                    this.physics.add.overlap(player, picsGlaceDroite, killPlayer, null, this);
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace, detectTrigger, null, this);
 
-                // PICS GLACE GAUCHE
+// TRIGGER PICS GLACE HAUT2
 
-                    //récupération
-                    picsGlaceGauche = this.physics.add.staticGroup();
-                    picsGlaceGaucheLayer = carteDuNiveau.getObjectLayer('picsGlaceGaucheLayer')['objects'];
-                    
-                    // creation
-                    picsGlaceGaucheLayer.forEach(object => {
-                        let obj = picsGlaceGauche.create(object.x + 16, object.y -16, 'picsGlaceGaucheImage');
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
-                    
-                    // collisions
-                    this.physics.add.overlap(player, picsGlaceGauche, killPlayer, null, this);
+    //récupération
+    triggerPicsGlace2 = this.physics.add.staticGroup(); triggerPicsGlaceLayer2 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer2')['objects'];
 
-                // TRIGGER PICS GLACE HAUT
+    // creation
+    triggerPicsGlaceLayer2.forEach(object => {let obj = triggerPicsGlace2.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
 
-                    //récupération
-                    triggerPicsGlace = this.physics.add.staticGroup();
-                    triggerPicsGlaceLayer = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer')['objects'];
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace2, detectTrigger2, null, this);
 
-                    // creation
-                    triggerPicsGlaceLayer.forEach(object => {
-                        let obj = triggerPicsGlace.create(object.x + 16, object.y+16).setVisible(false);
-                        obj.setScale(object.width/32, object.height/32);
-                        obj.body.width = object.width;
-                        obj.body.height = object.height;
-                    });
 
-                    // collisions
-                    this.physics.add.overlap(player, triggerPicsGlace, detectTrigger, null, this);
+// TRIGGER PICS GLACE HAUT3
 
-                // PICS GLACE HAUT (QUI TOMBE)
+    //récupération
+    triggerPicsGlace3 = this.physics.add.staticGroup(); triggerPicsGlaceLayer3 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer3')['objects'];
 
-                    //récupération
-                    picsGlaceHaut = this.physics.add.group();
-                    picsGlaceHautLayer = carteDuNiveau.getObjectLayer('picsGlaceHautLayer');
-              
-                    // creation
-                    picsGlaceHautLayer.objects.forEach( picsGlaceHautLayer => {
-                        const PicsGlaceHautLayer = picsGlaceHaut.create( picsGlaceHautLayer.x+16, picsGlaceHautLayer.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
-                    });
+    // creation
+    triggerPicsGlaceLayer3.forEach(object => {let obj = triggerPicsGlace3.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
 
-                    // collisions
-                    this.physics.add.overlap(triggerPicsGlace, picsGlaceHaut, physicAllowPicGlace, null, this);
-                    this.physics.add.overlap(player, picsGlaceHaut, killPlayer, null, this);
-                    this.physics.add.collider(plateformesNeige, picsGlaceHaut, destroyPicGlace, null, this);
-                    this.physics.add.collider(plateformesGlace, picsGlaceHaut, destroyPicGlace, null, this);
-                    this.physics.add.collider(platsGlaceFragile, picsGlaceHaut, destroyPicGlace, null, this);
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace3, detectTrigger3, null, this);
+
+// TRIGGER PICS GLACE HAUT4
+
+    //récupération
+    triggerPicsGlace4 = this.physics.add.staticGroup(); triggerPicsGlaceLayer4 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer4')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer4.forEach(object => {let obj = triggerPicsGlace4.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace4, detectTrigger4, null, this);
+
+// TRIGGER PICS GLACE HAUT5
+
+    //récupération
+    triggerPicsGlace5 = this.physics.add.staticGroup(); triggerPicsGlaceLayer5 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer5')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer5.forEach(object => {let obj = triggerPicsGlace5.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace5, detectTrigger5, null, this);
+
+// TRIGGER PICS GLACE HAUT6
+
+    //récupération
+    triggerPicsGlace6 = this.physics.add.staticGroup(); triggerPicsGlaceLayer6 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer6')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer6.forEach(object => {let obj = triggerPicsGlace6.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace6, detectTrigger6, null, this);
+
+// TRIGGER PICS GLACE HAUT7
+
+    //récupération
+    triggerPicsGlace7 = this.physics.add.staticGroup(); triggerPicsGlaceLayer7 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer7')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer7.forEach(object => {let obj = triggerPicsGlace7.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace7, detectTrigger7, null, this);
+
+// TRIGGER PICS GLACE HAUT8
+
+    //récupération
+    triggerPicsGlace8 = this.physics.add.staticGroup(); triggerPicsGlaceLayer8 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer8')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer8.forEach(object => {let obj = triggerPicsGlace8.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace8, detectTrigger8, null, this);
+
+// TRIGGER PICS GLACE HAUT9
+
+    //récupération
+    triggerPicsGlace9 = this.physics.add.staticGroup(); triggerPicsGlaceLayer9 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer9')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer9.forEach(object => {let obj = triggerPicsGlace9.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace9, detectTrigger9, null, this);
+
+// TRIGGER PICS GLACE HAUT10
+
+    //récupération
+    triggerPicsGlace10 = this.physics.add.staticGroup(); triggerPicsGlaceLayer10 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer10')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer10.forEach(object => {let obj = triggerPicsGlace10.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace10, detectTrigger10, null, this);
+
+// TRIGGER PICS GLACE HAUT11
+
+    //récupération
+    triggerPicsGlace11 = this.physics.add.staticGroup(); triggerPicsGlaceLayer11 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer11')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer11.forEach(object => {let obj = triggerPicsGlace11.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace11, detectTrigger11, null, this);
+
+// TRIGGER PICS GLACE HAUT11
+
+    //récupération
+    triggerPicsGlace12 = this.physics.add.staticGroup(); triggerPicsGlaceLayer12 = carteDuNiveau.getObjectLayer('triggerPicsGlaceLayer12')['objects'];
+
+    // creation
+    triggerPicsGlaceLayer12.forEach(object => {let obj = triggerPicsGlace12.create(object.x + 16, object.y+16).setVisible(false);obj.setScale(object.width/32, object.height/32);obj.body.width = object.width;obj.body.height = object.height;});
+
+    // collisions
+    this.physics.add.overlap(player, triggerPicsGlace12, detectTrigger12, null, this);
+
+
+// ----- FIN DES TRIGGERS ----
+    
+// PICS GLACE HAUT (QUI TOMBE) 1
+
+//récupération
+picsGlaceHaut = this.physics.add.group();
+picsGlaceHautLayer = carteDuNiveau.getObjectLayer('picsGlaceHautLayer');
+
+// creation
+picsGlaceHautLayer.objects.forEach( picsGlaceHautLayer => {
+    const PicsGlaceHautLayer = picsGlaceHaut.create( picsGlaceHautLayer.x+16, picsGlaceHautLayer.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace, picsGlaceHaut, physicAllowPicGlace, null, this);
+this.physics.add.overlap(player, picsGlaceHaut, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 2
+
+//récupération
+picsGlaceHaut2 = this.physics.add.group();
+picsGlaceHautLayer2 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer2');
+
+// creation
+picsGlaceHautLayer2.objects.forEach( picsGlaceHautLayer2 => {
+    const PicsGlaceHautLayer2 = picsGlaceHaut2.create( picsGlaceHautLayer2.x+16, picsGlaceHautLayer2.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace2, picsGlaceHaut2, physicAllowPicGlace2, null, this);
+this.physics.add.overlap(player, picsGlaceHaut2, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut2, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut2, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut2, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 3
+
+//récupération
+picsGlaceHaut3 = this.physics.add.group();
+picsGlaceHautLayer3 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer3');
+
+// creation
+picsGlaceHautLayer3.objects.forEach( picsGlaceHautLayer3 => {
+    const PicsGlaceHautLayer3 = picsGlaceHaut3.create( picsGlaceHautLayer3.x+16, picsGlaceHautLayer3.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace3, picsGlaceHaut3, physicAllowPicGlace3, null, this);
+this.physics.add.overlap(player, picsGlaceHaut3, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut3, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut3, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut3, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 4
+
+//récupération
+picsGlaceHaut4 = this.physics.add.group();
+picsGlaceHautLayer4 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer4');
+
+// creation
+picsGlaceHautLayer4.objects.forEach( picsGlaceHautLayer4 => {
+    const PicsGlaceHautLayer4 = picsGlaceHaut4.create( picsGlaceHautLayer4.x+16, picsGlaceHautLayer4.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace4, picsGlaceHaut4, physicAllowPicGlace4, null, this);
+this.physics.add.overlap(player, picsGlaceHaut4, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut4, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut4, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut4, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 5
+
+//récupération
+picsGlaceHaut5 = this.physics.add.group();
+picsGlaceHautLayer5 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer5');
+
+// creation
+picsGlaceHautLayer5.objects.forEach( picsGlaceHautLayer5 => {
+    const PicsGlaceHautLayer5 = picsGlaceHaut5.create( picsGlaceHautLayer5.x+16, picsGlaceHautLayer5.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace5, picsGlaceHaut5, physicAllowPicGlace5, null, this);
+this.physics.add.overlap(player, picsGlaceHaut5, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut5, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut5, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut5, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 6
+
+//récupération
+picsGlaceHaut6 = this.physics.add.group();
+picsGlaceHautLayer6 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer6');
+
+// creation
+picsGlaceHautLayer6.objects.forEach( picsGlaceHautLayer6 => {
+    const PicsGlaceHautLayer6 = picsGlaceHaut6.create( picsGlaceHautLayer6.x+16, picsGlaceHautLayer6.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace6, picsGlaceHaut6, physicAllowPicGlace6, null, this);
+this.physics.add.overlap(player, picsGlaceHaut6, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut6, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut6, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut6, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 7
+
+//récupération
+picsGlaceHaut7 = this.physics.add.group();
+picsGlaceHautLayer7 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer7');
+
+// creation
+picsGlaceHautLayer7.objects.forEach( picsGlaceHautLayer7 => {
+    const PicsGlaceHautLayer7 = picsGlaceHaut7.create( picsGlaceHautLayer7.x+16, picsGlaceHautLayer7.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace7, picsGlaceHaut7, physicAllowPicGlace7, null, this);
+this.physics.add.overlap(player, picsGlaceHaut7, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut7, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut7, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut7, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 8
+
+//récupération
+picsGlaceHaut8 = this.physics.add.group();
+picsGlaceHautLayer8 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer8');
+
+// creation
+picsGlaceHautLayer8.objects.forEach( picsGlaceHautLayer8 => {
+    const PicsGlaceHautLayer8 = picsGlaceHaut8.create( picsGlaceHautLayer8.x+16, picsGlaceHautLayer8.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace8, picsGlaceHaut8, physicAllowPicGlace8, null, this);
+this.physics.add.overlap(player, picsGlaceHaut8, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut8, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut8, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut8, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 9
+
+//récupération
+picsGlaceHaut9 = this.physics.add.group();
+picsGlaceHautLayer9 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer9');
+
+// creation
+picsGlaceHautLayer9.objects.forEach( picsGlaceHautLayer9 => {
+    const PicsGlaceHautLayer9 = picsGlaceHaut9.create( picsGlaceHautLayer9.x+16, picsGlaceHautLayer9.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace9, picsGlaceHaut9, physicAllowPicGlace9, null, this);
+this.physics.add.overlap(player, picsGlaceHaut9, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut9, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut9, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut9, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 10
+
+//récupération
+picsGlaceHaut10 = this.physics.add.group();
+picsGlaceHautLayer10 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer10');
+
+// creation
+picsGlaceHautLayer10.objects.forEach( picsGlaceHautLayer10 => {
+    const PicsGlaceHautLayer10 = picsGlaceHaut10.create( picsGlaceHautLayer10.x+16, picsGlaceHautLayer10.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace10, picsGlaceHaut10, physicAllowPicGlace10, null, this);
+this.physics.add.overlap(player, picsGlaceHaut10, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut10, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut10, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut10, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 11
+
+//récupération
+picsGlaceHaut11 = this.physics.add.group();
+picsGlaceHautLayer11 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer11');
+
+// creation
+picsGlaceHautLayer11.objects.forEach( picsGlaceHautLayer11 => {
+    const PicsGlaceHautLayer11 = picsGlaceHaut11.create( picsGlaceHautLayer11.x+16, picsGlaceHautLayer11.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace11, picsGlaceHaut11, physicAllowPicGlace11, null, this);
+this.physics.add.overlap(player, picsGlaceHaut11, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut11, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut11, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut11, destroyPicGlace, null, this);
+
+// PICS GLACE HAUT (QUI TOMBE) 12
+
+//récupération
+picsGlaceHaut12 = this.physics.add.group();
+picsGlaceHautLayer12 = carteDuNiveau.getObjectLayer('picsGlaceHautLayer12');
+
+// creation
+picsGlaceHautLayer12.objects.forEach( picsGlaceHautLayer12 => {
+    const PicsGlaceHautLayer12 = picsGlaceHaut12.create( picsGlaceHautLayer12.x+16, picsGlaceHautLayer12.y - 16, "picsGlaceHautImage").body.setAllowGravity(false);
+});
+
+// collisions
+this.physics.add.overlap(triggerPicsGlace12, picsGlaceHaut12, physicAllowPicGlace12, null, this);
+this.physics.add.overlap(player, picsGlaceHaut12, killPlayer, null, this);
+this.physics.add.collider(plateformesNeige, picsGlaceHaut12, destroyPicGlace, null, this);
+this.physics.add.collider(plateformesGlace, picsGlaceHaut12, destroyPicGlace, null, this);
+this.physics.add.collider(platsGlaceFragile, picsGlaceHaut12, destroyPicGlace, null, this);
 
                     // PICS RETRACTABLES BAS
 
@@ -684,6 +889,144 @@ function create(){
                     // collisions
                     this.physics.add.collider(monstresLeft, limitesMonstresLeft);
 
+            // OBJECTS
+
+            // ELEMENTS INTERACTIFS
+
+                // BOUTON ROSE
+
+                    //récupération
+                    boutonRose = this.physics.add.staticGroup();
+                    boutonRoseLayer = carteDuNiveau.getObjectLayer('boutonRoseLayer')['objects'];
+                    
+                    // creation
+                    boutonRoseLayer.forEach(object => {
+                    let obj = boutonRose.create(object.x + 16, object.y -11, 'boutonRoseImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(player, boutonRose, pressBoutonRose, null, this);
+
+                // PORTE ROSE
+
+                    //récupération
+                    porteRose = this.physics.add.staticGroup();
+                    porteRoseLayer = carteDuNiveau.getObjectLayer('porteRoseLayer')['objects'];
+                    
+                    // creation
+                    porteRoseLayer.forEach(object => {
+                    let obj = porteRose.create(object.x + 16, object.y +32, 'porteRoseImage');
+                        obj.setScale(object.width/32, object.height/64);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.collider(player, porteRose, disablePorteRose, null, this);
+
+                // BOUTON VERT
+
+                    //récupération
+                    boutonVert = this.physics.add.staticGroup();
+                    boutonVertLayer = carteDuNiveau.getObjectLayer('boutonVertLayer')['objects'];
+                    
+                    // creation
+                    boutonVertLayer.forEach(object => {
+                    let obj = boutonVert.create(object.x + 16, object.y -16, 'boutonVertImage');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(player, boutonVert, pressBoutonVert, null, this);
+
+                // PORTE VERTE
+
+                    //récupération
+                    porteVert = this.physics.add.staticGroup();
+                    porteVertLayer = carteDuNiveau.getObjectLayer('porteVerteLayer')['objects'];
+                    
+                    // creation
+                    porteVertLayer.forEach(object => {
+                    let obj = porteVert.create(object.x + 16, object.y +32, 'porteVertImage');
+                        obj.setScale(object.width/32, object.height/64);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.collider(player, porteVert, disablePorteVert, null, this);
+        
+            //CLEFS
+                //récupération
+                clef = this.physics.add.staticGroup();
+                clefsLayer = carteDuNiveau.getObjectLayer('clefsLayer')['objects'];
+                
+                // creation
+                clefsLayer.forEach(object => {
+                let obj = clef.create(object.x + 16, object.y -16, 'clefsImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.overlap(player, clef, collectClefs, null, this);
+
+            //PORTE FINALE
+                //récupération
+                porteFinale = this.physics.add.staticGroup();
+                porteFinaleLayer = carteDuNiveau.getObjectLayer('porteFinaleLayer')['objects'];
+                
+                // creation
+                porteFinaleLayer.forEach(object => {
+                let obj = porteFinale.create(object.x + 16, object.y+48, 'porteFinale');
+                    obj.setScale(object.width/32, object.height/96);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.collider(player, porteFinale, disablePorteFinale, null, this);
+
+            // PICK-UP-OBJECTS 
+                
+                //ESPRITS
+                    //récupération
+                    esprits = this.physics.add.staticGroup();
+                    espritsLayer = carteDuNiveau.getObjectLayer('espritsLayer')['objects'];
+                    
+                    // creation
+                    espritsLayer.forEach(object => {
+                    let obj = esprits.create(object.x + 16, object.y -16, 'espritCollectible');
+                        obj.setScale(object.width/32, object.height/32);
+                        obj.body.width = object.width;
+                        obj.body.height = object.height;
+                    });
+
+                    // collisions
+                    this.physics.add.overlap(player, esprits, collectEsprits, null, this);
+                    
+                // POWER UP - DOUBLE JUMP
+
+                powerUp = this.physics.add.staticGroup();
+                powerUpLayer = carteDuNiveau.getObjectLayer('powerUpLayer')['objects'];
+                
+                // creation
+                powerUpLayer.forEach(object => {
+                let obj = powerUp.create(object.x + 16, object.y -16, 'powerUpImage');
+                    obj.setScale(object.width/32, object.height/32);
+                    obj.body.width = object.width;
+                    obj.body.height = object.height;
+                });
+
+                // collisions
+                this.physics.add.overlap(player, powerUp, unlockDoubleJump, null, this);
+
     // LIMITES DU NIVEAU
 
         // LIMITES DU NIVEAU VIA DIMENSIONS
@@ -694,16 +1037,16 @@ function create(){
 
     // UI
         // LIFE
-        lifeUI = this.add.sprite(0,0, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
+        lifeUI = this.add.sprite(-15,-15, 'lifeFull').setOrigin(0,0).setScrollFactor(0);
 
         // SCORE ESPRITS
 
             //IMAGE ESPRITS
-            espritUi =this.add.sprite(1100, 40,'espritUI').setOrigin(0,0).setScrollFactor(0);
+            espritUi =this.add.sprite(520, 10,'espritUI').setOrigin(0,0).setScrollFactor(0);
             
             //NOMBRE D'ESPRITS
-            fondScore = this.add.sprite(1108,-6, 'fond_score').setOrigin(0,0).setScrollFactor(0);
-            textScore =this.add.text(1150,50,`${espritScore}`,{fontSize:'32px',fill:'#FFFFFF'}).setOrigin(0,0).setScrollFactor(0);
+            fondScore = this.add.sprite(520,-30, 'fond_score').setOrigin(0,0).setScrollFactor(0);
+            textScore =this.add.text(561,25,`${espritScore}`,{fontSize:'32px',fill:'#FFFFFF'}).setOrigin(0,0).setScrollFactor(0);
 
     // ANIMATIONS
     
@@ -761,13 +1104,13 @@ function create(){
         this.cameras.main.setBounds(0, 0, 1600, 1600);
         
         // TAILLE
-        this.cameras.main.setSize(1200, 750);
+        this.cameras.main.setSize(600, 400);
 
         // ANCRAGE CAMERA - JOUEUR
         this.cameras.main.startFollow(player);        
 
-        // CAMERA - Zoom de la camera (RETIRE CAR FAIT BUGER L'AFFICHAGE DE L'UI)
-        this.cameras.main.setZoom(3, 3);
+        // CAMERA - Zoom de la camera (RETIRE CAR CREE DES LIGNES PARASITES -> PAS BON POUR LE TRAVAIL DE 2D)
+        //this.cameras.main.setZoom(1.5, 1.5);
 
     // ----------------------------------------------------- FIN FONCTION CREATE ----------------------------------------------
 }
@@ -786,7 +1129,7 @@ function update(){
     //PLATEFORMES NORMALES (grotte et donjon)
     function normalPlatsProperties() {
         speedMoveX = 150;
-        speedMoveY = 280;
+        speedMoveY = 290;
         playerInertie = 0;
         wallNeige = false;
         wallIce = false;
@@ -795,7 +1138,7 @@ function update(){
     // PLATEFORMES NEIGE (ralentissement)
     function neigePlatsProperties() {
         speedMoveX = 100;
-        speedMoveY = 280;
+        speedMoveY = 290;
         playerInertie = 0;
         wallNeige = true;
         wallIce = false;
@@ -804,7 +1147,7 @@ function update(){
     // PLATEFORMES GLACE (inertie et wallgrab glissant)
     function glacePlatsProperties() {
         speedMoveX = 150;
-        speedMoveY = 280;
+        speedMoveY = 290;
         playerInertie = 3000;
         wallNeige = false;
         wallIce = true;
@@ -875,12 +1218,11 @@ function movementPlayer(){
                 // player can only double jump if it is on the floor
                 player.body.setVelocityY(-speedMoveY);
                 didPressJump = false;
-                console.log("saut = ", speedMoveY);
+                player.setAccelerationX(0);
 
                 setTimeout(function() {
                     if(doubleJumpAbility == true){
                         canDoubleJump = true;
-                        console.log("JUMP" + canDoubleJump);  
                     }  
                 }, 500);              
 
@@ -888,7 +1230,6 @@ function movementPlayer(){
                 // player can only jump 2x (double jump)
                 canDoubleJump = false;
                 player.body.setVelocityY(-speedMoveY);
-                console.log("DOUBLE JUMP !")
             }
         }
     }
@@ -916,8 +1257,6 @@ function movementPlayer(){
                 player.setAccelerationX(4000);
                 player.setMaxVelocity(1000);
                 player.setVelocityY(-speedMoveY);
-
-                console.log(player.acceleration);
 
                 /*setTimeout(function(){
                     canDoubleJump = true;
@@ -971,13 +1310,11 @@ function collectEsprits(player, esprit){
     esprit.destroy(esprit.x, esprit.y);
     espritScore ++; // increment le score
     textScore.setText(`${espritScore}`); // montre le score actuel
-    console.log(espritScore);
 }
 
 function collectClefs(player, clef){
     clef.destroy(clef.x, clef.y);
     clefScore ++;
-    console.log(clefScore);
 }
 
 function disablePorteFinale(player, porteFinale){
@@ -1028,25 +1365,92 @@ function destructionGlace(player, platsGlaceFragile){
     }, 1000); 
 }
 
-function physicAllowPicGlace(triggerPicsGlace, picsGlaceHaut){
-    if (chutePicGlace == true){
-        chutePicGlace = false;
-        triggerPicsGlace.destroy();
-        
-        setTimeout(function(){
-            picsGlaceHaut.body.setAllowGravity(true);
-        }, 500);        
-    }
-
+function destroyPicGlace(pics){
+    pics.destroy();
 }
 
-function detectTrigger(player, triggerPicsGlace){
-    chutePicGlace = true;
-}
+//1
 
-function destroyPicGlace(picsGlaceHaut){
-    picsGlaceHaut.destroy();
-}
+function physicAllowPicGlace(trigger, pics){
+    if (chutePicGlace == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger(player, trigger){chutePicGlace = true;}
+
+//2
+
+function physicAllowPicGlace2(trigger, pics){
+    if (chutePicGlace2 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger2(player, trigger){chutePicGlace2 = true;}
+
+//3
+
+function physicAllowPicGlace3(trigger, pics){
+    if (chutePicGlace3 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger3(player, trigger){chutePicGlace3 = true;}
+
+//4
+
+function physicAllowPicGlace4(trigger, pics){
+    if (chutePicGlace4 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger4(player, trigger){chutePicGlace4 = true;}
+
+//5
+
+function physicAllowPicGlace5(trigger, pics){
+    if (chutePicGlace5 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger5(player, trigger){chutePicGlace5 = true;}
+
+//6
+
+function physicAllowPicGlace6(trigger, pics){
+    if (chutePicGlace6 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger6(player, trigger){chutePicGlace6 = true;}
+
+//7
+
+function physicAllowPicGlace7(trigger, pics){
+    if (chutePicGlace7 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger7(player, trigger){chutePicGlace7 = true;}
+
+//8
+
+function physicAllowPicGlace8(trigger, pics){
+    if (chutePicGlace8 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger8(player, trigger){chutePicGlace8 = true;}
+
+//9
+
+function physicAllowPicGlace9(trigger, pics){
+    if (chutePicGlace9 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger9(player, trigger){chutePicGlace9 = true;}
+
+// 10
+
+function physicAllowPicGlace10(trigger, pics){
+    if (chutePicGlace10 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger10(player, trigger){chutePicGlace10 = true;}
+
+//11
+
+function physicAllowPicGlace11(trigger, pics){
+    if (chutePicGlace11 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger11(player, trigger){chutePicGlace11 = true;}
+
+//12
+function physicAllowPicGlace12(trigger, pics){
+    if (chutePicGlace12 == true){trigger.destroy(); setTimeout(function(){pics.body.setAllowGravity(true);}, 500);}}
+
+function detectTrigger12(player, trigger){chutePicGlace12 = true;}
 
     // ANIMATION DES PICS RETRACTABLES
 
@@ -1078,7 +1482,6 @@ function destroyPicGlace(picsGlaceHaut){
 
         function picsRetractablesKill(player, retractPicsBas){
             if (picsRetractOn == true){
-                console.log("KILL PLAYER AVEC PICS !");
                 killPlayer();
             }
         }
@@ -1096,12 +1499,9 @@ function getContactMob() {
 function toucheMobGauche(player, monstresLeft) {
     if(player.body.touching.right || player.body.touching.left || player.body.touching.up){
         if(invincibleOn == false){
-            console.log("contact ennemi");
-
             health -= 1;
             gestionLife();
 
-            console.log(health);
             invincible();
             setTimeout(finInvicible, 700); 
         }
@@ -1116,12 +1516,10 @@ function toucheMobGauche(player, monstresLeft) {
 function toucheMobDroite(player, monstresRight) {
     if(player.body.touching.right || player.body.touching.left || player.body.touching.up){
         if(invincibleOn == false){
-            console.log("contact ennemi");
 
             health -= 1;
             gestionLife();
 
-            console.log(health);
             invincible();
             setTimeout(finInvicible, 700); 
         }
@@ -1157,7 +1555,6 @@ function gestionLife(){
     // REND INVINCIBLE
     function invincible() {
         invincibleOn = true;
-        console.log("invincible");
 
         // animation invincible
         playerInvisible();
@@ -1166,7 +1563,6 @@ function gestionLife(){
     // FIN INVINCIBLE
     function finInvicible() {
         invincibleOn = false;
-        console.log("Peut se faire touché");
     }
 
     // ANIMATION - FRAME D'INVINCIBILITE
@@ -1180,7 +1576,6 @@ function gestionLife(){
         // ANIMATION - FRAME D'INVINCIBILITE (PART 2 - VISIBLE)
         function playerVisible() {
             if (frameInvincible < 3) {
-                console.log("visible");
                 player.visible = true;
                 setTimeout(playerInvisible, 100);   
                 frameInvincible += 1;
@@ -1194,71 +1589,31 @@ function gestionLife(){
 // MORT DU JOUEUR
 function killPlayer(){
     gameOver = true;
-    player.setTint(0xff0000);
-    player.anims.play('turn');
+    player.setTint(0xff0000); //perso en rouge
+    player.anims.play('turn'); // tourné vers nous
+    lifeUI.setTexture('lifeDead'); // UI "mort"
     this.physics.pause();
-    lifeUI.setTexture('lifeDead');
-    console.log("Check death 1");
 }
 
-// RESTART LE JEU
+// RESTART LE JEU (NE FONCTIONNE PAS)
 /*function respawn(){
     if (gameOver == true){
 
         setTimeout(function() {
             
-            this.scene.restart();
-            // VARIABLES
-            let platforms;
-            let player;
-            let espritsLayer;
-
-            let cursors;
-
-            let health = 4;
-            let frameInvincible = 0;
-            let invincibleOn = false;
-
-            let gameOver = false;
-
-            let commandesLocked = false;
-            let wallJumpLocked = false;
-
-            let esprits;
-            let textScore;
-            let espritScore = 0;
-
-            let speedMoveX = 200;
-            let speedMoveY = 2000;
-            let playerInertie = 0;
-
-            let wallNeige = false;
-
-            let doubleJumpAbility = false;
-            let didPressJump = false;
-            let canDoubleJump = false;
-
-            var controller = false; //manette
-        }, 1000);*/
-
-
-        /*setTimeout(player.body.reset(1352, 680), 8000);
-
-        setTimeout(function() {
-            player.body.reset(1352, 680);    
-            player.setTint(000000);
-            
-            health = 4;
-            frameInvincible = 0;
-
-            commandesLocked = false;
-            wallJumpLocked = false;
-
-            espritScore = 0;
+            this.scene.restart();   
         }, 1000);
-
     }
 }*/
         </script>
+
+    <br> 
+    <br> 
+    <br> 
+
+    <div style = "text-align:center;">
+        <img src="assets/logo.png">
+    </div>
+
     </body>
 </html>
