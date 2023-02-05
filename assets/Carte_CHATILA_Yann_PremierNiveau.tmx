@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="76" nextobjectid="554">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="78" nextobjectid="564">
  <editorsettings>
   <export target="map.json" format="json"/>
  </editorsettings>
@@ -4363,17 +4363,17 @@
   <object id="430" gid="678" x="1472" y="384" width="32" height="32"/>
   <object id="433" gid="678" x="1440" y="192" width="32" height="32"/>
   <object id="434" gid="678" x="1376" y="96" width="32" height="32"/>
-  <object id="444" gid="678" x="1120" y="320" width="32" height="32"/>
+  <object id="444" gid="678" x="1120" y="352" width="32" height="32"/>
   <object id="445" gid="678" x="1184" y="416" width="32" height="32"/>
   <object id="465" gid="678" x="160" y="416" width="32" height="32"/>
   <object id="477" gid="678" x="800" y="288" width="32" height="32"/>
   <object id="488" gid="678" x="1248" y="384" width="32" height="32"/>
  </objectgroup>
- <objectgroup id="42" name="picsGlaceHautLayer">
-  <object id="364" gid="579" x="320" y="352" width="32" height="32"/>
+ <objectgroup id="77" name="picsGlaceHautLayer1">
+  <object id="563" gid="579" x="288" y="352" width="32" height="32"/>
  </objectgroup>
- <objectgroup id="43" name="triggerPicsGlaceLayer">
-  <object id="468" x="320" y="320" width="32" height="160"/>
+ <objectgroup id="76" name="triggerPicsGlaceLayer1">
+  <object id="561" x="288" y="320" width="32" height="192"/>
  </objectgroup>
  <objectgroup id="53" name="picsGlaceHautLayer2">
   <object id="527" gid="579" x="32" y="320" width="32" height="32"/>
