@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="78" nextobjectid="564">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="78" nextobjectid="594">
  <editorsettings>
   <export target="map.json" format="json"/>
  </editorsettings>
@@ -3942,6 +3942,34 @@
    </properties>
   </tile>
  </tileset>
+ <objectgroup id="15" name="cristauxLayer">
+  <object id="39" gid="405" x="736" y="1600" width="32" height="32"/>
+  <object id="40" gid="405" x="768" y="1600" width="32" height="32"/>
+  <object id="41" gid="405" x="832" y="1568" width="32" height="32"/>
+  <object id="42" gid="405" x="864" y="1568" width="32" height="32"/>
+  <object id="43" gid="405" x="800" y="1344" width="32" height="32"/>
+  <object id="44" gid="405" x="832" y="1344" width="32" height="32"/>
+  <object id="45" gid="405" x="864" y="1344" width="32" height="32"/>
+  <object id="46" gid="405" x="896" y="1344" width="32" height="32"/>
+  <object id="47" gid="405" x="928" y="1344" width="32" height="32"/>
+  <object id="48" gid="405" x="960" y="1344" width="32" height="32"/>
+  <object id="49" gid="405" x="1024" y="1376" width="32" height="32"/>
+  <object id="50" gid="405" x="1056" y="1376" width="32" height="32"/>
+  <object id="51" gid="405" x="1056" y="1568" width="32" height="32"/>
+  <object id="52" gid="405" x="960" y="1568" width="32" height="32"/>
+  <object id="53" gid="405" x="1248" y="1568" width="32" height="32"/>
+  <object id="54" gid="405" x="1280" y="1568" width="32" height="32"/>
+  <object id="55" gid="405" x="1376" y="1568" width="32" height="32"/>
+  <object id="56" gid="405" x="1440" y="1568" width="32" height="32"/>
+  <object id="57" gid="405" x="1472" y="1568" width="32" height="32"/>
+  <object id="189" gid="405" x="1440" y="1312" width="32" height="32"/>
+  <object id="190" gid="405" x="1472" y="1312" width="32" height="32"/>
+  <object id="191" gid="405" x="1504" y="1312" width="32" height="32"/>
+  <object id="192" gid="405" x="1536" y="1312" width="32" height="32"/>
+  <object id="193" gid="405" x="1408" y="1312" width="32" height="32"/>
+  <object id="194" gid="405" x="960" y="832" width="32" height="32"/>
+  <object id="195" gid="405" x="928" y="832" width="32" height="32"/>
+ </objectgroup>
  <layer id="3" name="plateformes" width="50" height="50">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -4112,39 +4140,11 @@
   <object id="202" gid="619" x="32" y="1504" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="19" name="porteBleueLayer"/>
- <objectgroup id="20" name="porteRoseLayer">
+ <objectgroup id="20" name="porteRoseLayer" visible="0">
   <object id="201" x="416" y="1120" width="32" height="64"/>
  </objectgroup>
- <objectgroup id="21" name="porteVerteLayer">
+ <objectgroup id="21" name="porteVerteLayer" visible="0">
   <object id="108" x="256" y="864" width="32" height="64"/>
- </objectgroup>
- <objectgroup id="15" name="cristauxLayer">
-  <object id="39" gid="405" x="736" y="1600" width="32" height="32"/>
-  <object id="40" gid="405" x="768" y="1600" width="32" height="32"/>
-  <object id="41" gid="405" x="832" y="1568" width="32" height="32"/>
-  <object id="42" gid="405" x="864" y="1568" width="32" height="32"/>
-  <object id="43" gid="405" x="800" y="1344" width="32" height="32"/>
-  <object id="44" gid="405" x="832" y="1344" width="32" height="32"/>
-  <object id="45" gid="405" x="864" y="1344" width="32" height="32"/>
-  <object id="46" gid="405" x="896" y="1344" width="32" height="32"/>
-  <object id="47" gid="405" x="928" y="1344" width="32" height="32"/>
-  <object id="48" gid="405" x="960" y="1344" width="32" height="32"/>
-  <object id="49" gid="405" x="1024" y="1376" width="32" height="32"/>
-  <object id="50" gid="405" x="1056" y="1376" width="32" height="32"/>
-  <object id="51" gid="405" x="1056" y="1568" width="32" height="32"/>
-  <object id="52" gid="405" x="960" y="1568" width="32" height="32"/>
-  <object id="53" gid="405" x="1248" y="1568" width="32" height="32"/>
-  <object id="54" gid="405" x="1280" y="1568" width="32" height="32"/>
-  <object id="55" gid="405" x="1376" y="1568" width="32" height="32"/>
-  <object id="56" gid="405" x="1440" y="1568" width="32" height="32"/>
-  <object id="57" gid="405" x="1472" y="1568" width="32" height="32"/>
-  <object id="189" gid="405" x="1440" y="1312" width="32" height="32"/>
-  <object id="190" gid="405" x="1472" y="1312" width="32" height="32"/>
-  <object id="191" gid="405" x="1504" y="1312" width="32" height="32"/>
-  <object id="192" gid="405" x="1536" y="1312" width="32" height="32"/>
-  <object id="193" gid="405" x="1408" y="1312" width="32" height="32"/>
-  <object id="194" gid="405" x="960" y="832" width="32" height="32"/>
-  <object id="195" gid="405" x="928" y="832" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="23" name="laveLayer">
   <object id="114" gid="415" x="384" y="1600" width="32" height="32"/>
@@ -4239,7 +4239,7 @@
  <objectgroup id="30" name="limitesMonstresRightLayer">
   <object id="185" x="832" y="672" width="32" height="32"/>
   <object id="186" x="832" y="928" width="32" height="32"/>
-  <object id="326" x="128" y="992" width="32" height="32"/>
+  <object id="326" x="128" y="896" width="32" height="32"/>
   <object id="327" x="128" y="576" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="32" name="retractPicsBasLayer">
@@ -4273,12 +4273,10 @@
   <object id="363" gid="713" x="64" y="960" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="35" name="retractPicsDroiteLayer">
-  <object id="217" gid="815" x="448" y="1344" width="32" height="32"/>
   <object id="218" gid="815" x="640" y="1088" width="32" height="32"/>
   <object id="219" gid="815" x="640" y="1056" width="32" height="32"/>
-  <object id="273" gid="815" x="192" y="1184" width="32" height="32"/>
   <object id="291" gid="815" x="640" y="704" width="32" height="32"/>
-  <object id="308" gid="815" x="384" y="1056" width="32" height="32"/>
+  <object id="308" gid="815" x="384" y="1088" width="32" height="32"/>
   <object id="314" gid="815" x="64" y="864" width="32" height="32"/>
   <object id="333" gid="815" x="416" y="768" width="32" height="32"/>
   <object id="340" gid="815" x="320" y="1440" width="32" height="32"/>
@@ -4287,14 +4285,12 @@
  <objectgroup id="36" name="retractPicsDroiteOffLayer">
   <object id="220" gid="715" x="640" y="1056" width="32" height="32"/>
   <object id="221" gid="715" x="640" y="1088" width="32" height="32"/>
-  <object id="222" gid="715" x="448" y="1344" width="32" height="32"/>
   <object id="293" gid="715" x="640" y="704" width="32" height="32"/>
-  <object id="309" gid="715" x="384" y="1056" width="32" height="32"/>
+  <object id="309" gid="715" x="384" y="1088" width="32" height="32"/>
   <object id="316" gid="715" x="64" y="864" width="32" height="32"/>
   <object id="334" gid="715" x="416" y="768" width="32" height="32"/>
   <object id="341" gid="715" x="320" y="1440" width="32" height="32"/>
   <object id="354" gid="715" x="320" y="832" width="32" height="32"/>
-  <object id="356" gid="715" x="192" y="1184" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="37" name="retractPicsGaucheLayer">
   <object id="223" gid="819" x="160" y="1184" width="32" height="32"/>
@@ -4304,7 +4300,7 @@
   <object id="279" gid="819" x="448" y="1088" width="32" height="32"/>
   <object id="280" gid="819" x="448" y="1024" width="32" height="32"/>
   <object id="298" gid="819" x="352" y="672" width="32" height="32"/>
-  <object id="306" gid="819" x="352" y="992" width="32" height="32"/>
+  <object id="306" gid="819" x="352" y="1024" width="32" height="32"/>
   <object id="335" gid="819" x="384" y="768" width="32" height="32"/>
   <object id="342" gid="819" x="288" y="1440" width="32" height="32"/>
  </objectgroup>
@@ -4316,7 +4312,7 @@
   <object id="282" gid="719" x="448" y="1056" width="32" height="32"/>
   <object id="283" gid="719" x="448" y="1088" width="32" height="32"/>
   <object id="299" gid="719" x="352" y="672" width="32" height="32"/>
-  <object id="304" gid="719" x="352" y="992" width="32" height="32"/>
+  <object id="304" gid="719" x="352" y="1024" width="32" height="32"/>
   <object id="336" gid="719" x="384" y="768" width="32" height="32"/>
   <object id="345" gid="719" x="288" y="1440" width="32" height="32"/>
  </objectgroup>
@@ -4351,6 +4347,7 @@
   <object id="367" gid="210" x="512" y="448" width="32" height="32"/>
   <object id="435" gid="210" x="1376" y="32" width="32" height="32"/>
   <object id="455" gid="210" x="1184" y="224" width="32" height="32"/>
+  <object id="589" gid="210" x="1312" y="160" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="41" name="platsGlaceFragileLayer">
   <object id="251" gid="678" x="896" y="128" width="32" height="32"/>
@@ -4369,76 +4366,18 @@
   <object id="477" gid="678" x="800" y="288" width="32" height="32"/>
   <object id="488" gid="678" x="1248" y="384" width="32" height="32"/>
  </objectgroup>
- <objectgroup id="77" name="picsGlaceHautLayer1">
-  <object id="563" gid="579" x="288" y="352" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="76" name="triggerPicsGlaceLayer1">
-  <object id="561" x="288" y="320" width="32" height="192"/>
- </objectgroup>
- <objectgroup id="53" name="picsGlaceHautLayer2">
-  <object id="527" gid="579" x="32" y="320" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="52" name="triggerPicsGlaceLayer2">
-  <object id="509" x="32" y="288" width="32" height="192"/>
- </objectgroup>
- <objectgroup id="54" name="picsGlaceHautLayer3">
-  <object id="528" gid="579" x="96" y="192" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="55" name="triggerPicsGlaceLayer3">
-  <object id="529" x="96" y="160" width="32" height="224"/>
- </objectgroup>
- <objectgroup id="61" name="picsGlaceHautLayer4">
-  <object id="530" gid="579" x="416" y="160" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="56" name="triggerPicsGlaceLayer4">
-  <object id="536" x="416" y="128" width="32" height="192"/>
- </objectgroup>
- <objectgroup id="62" name="picsGlaceHautLayer5">
-  <object id="531" gid="579" x="512" y="160" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="57" name="triggerPicsGlaceLayer5">
-  <object id="545" x="512" y="128" width="32" height="160"/>
- </objectgroup>
- <objectgroup id="63" name="picsGlaceHautLayer6">
-  <object id="532" gid="579" x="608" y="160" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="58" name="triggerPicsGlaceLayer6">
-  <object id="544" x="608" y="128" width="32" height="160"/>
- </objectgroup>
- <objectgroup id="64" name="picsGlaceHautLayer7">
-  <object id="533" gid="579" x="1088" y="192" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="59" name="triggerPicsGlaceLayer7">
-  <object id="543" x="1088" y="160" width="32" height="288"/>
- </objectgroup>
- <objectgroup id="65" name="picsGlaceHautLayer8">
-  <object id="534" gid="579" x="1248" y="256" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="60" name="triggerPicsGlaceLayer8">
-  <object id="547" x="1248" y="224" width="32" height="224"/>
- </objectgroup>
- <objectgroup id="66" name="picsGlaceHautLayer9">
-  <object id="535" gid="579" x="1536" y="128" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="67" name="triggerPicsGlaceLayer9">
-  <object id="542" x="1536" y="96" width="32" height="160"/>
- </objectgroup>
- <objectgroup id="68" name="picsGlaceHautLayer10">
-  <object id="548" gid="579" x="736" y="384" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="74" name="triggerPicsGlaceLayer10">
-  <object id="551" x="736" y="352" width="32" height="96"/>
- </objectgroup>
- <objectgroup id="69" name="picsGlaceHautLayer11">
-  <object id="549" gid="579" x="800" y="384" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="72" name="triggerPicsGlaceLayer11">
-  <object id="552" x="800" y="352" width="32" height="96"/>
- </objectgroup>
- <objectgroup id="70" name="picsGlaceHautLayer12">
-  <object id="550" gid="579" x="864" y="384" width="32" height="32"/>
- </objectgroup>
- <objectgroup id="75" name="triggerPicsGlaceLayer12">
-  <object id="553" x="864" y="352" width="32" height="96"/>
+ <objectgroup id="77" name="picsGlaceHautLayer">
+  <object id="575" name="7" x="288" y="320" width="32" height="32"/>
+  <object id="576" name="7" x="32" y="288" width="32" height="32"/>
+  <object id="577" name="7" x="96" y="160" width="32" height="32"/>
+  <object id="578" name="7" x="416" y="128" width="32" height="32"/>
+  <object id="579" name="7" x="512" y="128" width="32" height="32"/>
+  <object id="580" name="7" x="608" y="128" width="32" height="32"/>
+  <object id="581" name="9" x="1088" y="160" width="32" height="32"/>
+  <object id="582" name="7" x="1248" y="224" width="32" height="32"/>
+  <object id="583" name="7" x="1536" y="96" width="32" height="32"/>
+  <object id="584" name="3" x="736" y="352" width="32" height="32"/>
+  <object id="585" name="3" x="800" y="352" width="32" height="32"/>
+  <object id="586" name="3" x="864" y="352" width="32" height="32"/>
  </objectgroup>
 </map>
