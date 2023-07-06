@@ -5,6 +5,12 @@ class MainScreen extends Phaser.Scene {
 
     create() {
 
+        this.music = this.sound.add('music');
+
+        this.music.play();
+        this.music.setLoop(true)
+            .setVolume(0.4);
+
         this.logo = this.add.image(50, 50, 'logoMainScreen').setOrigin(0, 0).setScale(0.8).setAlpha(0);
 
         this.startButton = this.add.text(200, 280, 'START', { font: '50px MorrisRomanBlack', fill: '#ffffff', justify: 'middle' })

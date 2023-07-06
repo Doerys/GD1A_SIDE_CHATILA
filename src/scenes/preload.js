@@ -90,6 +90,8 @@ class Preload extends Phaser.Scene {
         this.load.image('clefsImage', 'assets/clef.png');
         this.load.image('porteFinale', 'assets/porteFinale.png');
 
+        this.load.audio('music', 'assets/music.mp3');
+
         // ----------------------------------------------------- FIN FONCTION PRELOAD ----------------------------------------------
 
     }
